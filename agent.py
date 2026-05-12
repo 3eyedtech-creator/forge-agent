@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from dotenv import load_dotenv
+from event_log import create_event, write_event
 from langchain.agents import create_agent
 from langchain_openai import ChatOpenAI
 from rich.console import Console
@@ -49,6 +50,9 @@ def main() -> None:
         return
 
     config = load_config()
+    session_event = create_event("session_started", {"model": config.model})
+    write_event(session_event)
+
     llm = ChatOpenAI(model=config.model)
     agent = create_agent(
         model=llm,
@@ -70,10 +74,12 @@ def main() -> None:
             console.print("[yellow]Please enter a question.[/yellow]")
             continue
 
+        write_event(create_event("user_message", {"content": query}))
         messages.append({"role": "user", "content": query})
         result = agent.invoke({"messages": messages})
         answer = get_last_message_text(result)
 
+        write_event(create_event("assistant_message", {"content": answer}))
         messages.append({"role": "assistant", "content": answer})
         console.print(Panel(answer, title="Agent", border_style="green"))
 

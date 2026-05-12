@@ -690,9 +690,11 @@ Budget policies:
 **Acceptance Criteria:**
 
 - Every session, tool call, model call, and edit has a unique ID.
-- Logs are structured JSON internally.
-- CLI can render concise human-readable logs.
-- Tests can assert event sequences deterministically.
+- Initial slice logs `session_started`, `user_message`, and `assistant_message` events to `.forge-agent/events.jsonl`.
+- Logs are structured JSON lines.
+- Later slices will add tool call, model call, and edit events.
+- CLI rendering of event logs will be added after the event format is stable.
+- Tests assert event creation and JSONL writing.
 
 ---
 

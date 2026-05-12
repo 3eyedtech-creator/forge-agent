@@ -38,3 +38,5 @@ python agent.py
 ```
 
 Type `exit` or `quit` to stop the chat loop.
+
+The agent writes a local JSONL event log to `.forge-agent/events.jsonl`.
