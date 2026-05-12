@@ -834,6 +834,12 @@ Budget policies:
 - Tool outputs are structured observations.
 - Mock tools can be used in tests.
 
+**Initial Slice:**
+
+- Expose file list, file read, and text search primitives as LangChain `@tool` functions.
+- Keep wrappers small and string-returning so the model can read results easily.
+- Defer Pydantic input schemas, output schemas, risk metadata, and registry dispatch to later slices.
+
 ---
 
 ### CA-031: Implement Tool Registry
@@ -865,6 +871,14 @@ Budget policies:
 - Policy supports allow, deny, and approval-required decisions.
 - Decisions include human-readable reasons.
 - Tests cover destructive command detection and blocked secret reads.
+
+**Initial Slice:**
+
+- Add a small shell command policy with allow, approval-required, and block decisions.
+- Allow obvious read-only commands such as `git status`.
+- Block destructive commands such as `git reset --hard`, `rm`, `del`, and `rmdir`.
+- Require approval for everything else.
+- Later slices will add file policy checks, human-readable decision reasons, and secret-read blocking.
 
 ---
 

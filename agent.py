@@ -3,6 +3,7 @@ import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 
+from agent_tools import build_tools
 from dotenv import load_dotenv
 from event_log import create_event, write_event
 from langchain.agents import create_agent
@@ -54,10 +55,14 @@ def main() -> None:
     write_event(session_event)
 
     llm = ChatOpenAI(model=config.model)
+    tools = build_tools(Path.cwd())
     agent = create_agent(
         model=llm,
-        tools=[],
-        system_prompt="You are a helpful coding agent. Keep answers clear and concise.",
+        tools=tools,
+        system_prompt=(
+            "You are a helpful coding agent. Keep answers clear and concise. "
+            "Use workspace tools when you need to inspect local files."
+        ),
     )
     messages = []
 
