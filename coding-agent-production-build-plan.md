@@ -1052,6 +1052,13 @@ Budget policies:
 - Compresses old logs and older conversation.
 - Emits debug metadata showing included and excluded context.
 
+**Initial Slice:**
+
+- Format retrieved context items into a model-readable prompt section.
+- Include file path, line range, score, retrieval reason, and content.
+- Apply a simple max-token budget using existing chunk token estimates.
+- Later slices will merge task state, tool outputs, memories, edited files, and debug metadata.
+
 ---
 
 ### CA-053: Implement Token Budgeter
