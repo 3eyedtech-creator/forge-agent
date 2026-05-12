@@ -2,8 +2,8 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from file_read_tool import FileReadError, read_text_file
-from path_utils import PathOutsideWorkspaceError
+from forge_agent.file_read_tool import FileReadError, read_text_file
+from forge_agent.path_utils import PathOutsideWorkspaceError
 
 
 class FileReadToolTests(unittest.TestCase):

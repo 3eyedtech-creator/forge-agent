@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "forge-agent"
+version = "0.1.0"
+description = "A local CLI coding agent built for learning."
+requires-python = ">=3.11"
+dependencies = [
+    "langchain",
+    "langchain-openai",
+    "langgraph",
+    "python-dotenv",
+    "rich",
+]
+
+[project.scripts]
+forge = "forge_agent.agent:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

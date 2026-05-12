@@ -1,5 +1,1 @@
-langchain
-langchain-openai
-langgraph
-python-dotenv
-rich
+-e .

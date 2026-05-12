@@ -2,7 +2,7 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from path_utils import PathOutsideWorkspaceError, resolve_workspace_path
+from forge_agent.path_utils import PathOutsideWorkspaceError, resolve_workspace_path
 
 
 class PathUtilsTests(unittest.TestCase):

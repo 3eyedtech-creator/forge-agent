@@ -2,7 +2,7 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
-from policy_engine import ApprovalResponse, PolicyDecision, decide_shell_command, resolve_policy_decision
+from forge_agent.policy_engine import ApprovalResponse, PolicyDecision, decide_shell_command, resolve_policy_decision
 
 
 class ShellCommandError(ValueError):

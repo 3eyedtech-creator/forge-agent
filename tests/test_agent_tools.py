@@ -2,7 +2,7 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from agent_tools import (
+from forge_agent.agent_tools import (
     run_create_file_tool,
     run_edit_file_tool,
     run_list_files_tool,

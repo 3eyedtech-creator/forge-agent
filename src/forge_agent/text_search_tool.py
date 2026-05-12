@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 
-from file_list_tool import list_files
+from forge_agent.file_list_tool import list_files
 
 
 @dataclass

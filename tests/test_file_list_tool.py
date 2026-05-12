@@ -2,7 +2,7 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from file_list_tool import list_files
+from forge_agent.file_list_tool import list_files
 
 
 class FileListToolTests(unittest.TestCase):

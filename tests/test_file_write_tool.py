@@ -2,8 +2,8 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from file_write_tool import FileWriteError, create_file, edit_file, write_file
-from path_utils import PathOutsideWorkspaceError
+from forge_agent.file_write_tool import FileWriteError, create_file, edit_file, write_file
+from forge_agent.path_utils import PathOutsideWorkspaceError
 
 
 class FileWriteToolTests(unittest.TestCase):

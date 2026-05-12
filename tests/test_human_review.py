@@ -1,6 +1,6 @@
 import unittest
 
-from human_review import decisions_from_approvals, has_rejection
+from forge_agent.human_review import decisions_from_approvals, has_rejection
 
 
 class HumanReviewTests(unittest.TestCase):

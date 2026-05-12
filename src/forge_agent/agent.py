@@ -4,9 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from uuid import uuid4
 
-from agent_tools import build_tools
 from dotenv import load_dotenv
-from event_log import create_event, write_event
 from langchain.agents import create_agent
 from langchain.agents.middleware import HumanInTheLoopMiddleware
 from langchain_openai import ChatOpenAI
@@ -16,11 +14,12 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
 
-from human_review import ask_for_tool_decisions, has_rejection
+from forge_agent.agent_tools import build_tools
+from forge_agent.event_log import create_event, write_event
+from forge_agent.human_review import ask_for_tool_decisions, has_rejection
 
 
 console = Console()
-CONFIG_PATH = Path(".forge-agent") / "config.toml"
 DEFAULT_MODEL = "gpt-4.1-mini"
 
 
@@ -29,11 +28,13 @@ class AgentConfig:
     model: str = DEFAULT_MODEL
 
 
-def load_config() -> AgentConfig:
-    if not CONFIG_PATH.exists():
+def load_config(workspace_root: Path) -> AgentConfig:
+    config_path = workspace_root / ".forge-agent" / "config.toml"
+
+    if not config_path.exists():
         return AgentConfig()
 
-    with CONFIG_PATH.open("rb") as config_file:
+    with config_path.open("rb") as config_file:
         data = tomllib.load(config_file)
 
     return AgentConfig(model=data.get("model", DEFAULT_MODEL))
@@ -53,18 +54,19 @@ def get_last_message_text(result: dict) -> str:
 
 
 def main() -> None:
-    load_dotenv(override=True)
+    workspace_root = Path.cwd().resolve()
+    load_dotenv(dotenv_path=workspace_root / ".env", override=True)
 
     if not os.getenv("OPENAI_API_KEY"):
         console.print("[red]OPENAI_API_KEY is not set. Add it to a .env file before running the agent.[/red]")
         return
 
-    config = load_config()
+    config = load_config(workspace_root)
     session_event = create_event("session_started", {"model": config.model})
     write_event(session_event)
 
     llm = ChatOpenAI(model=config.model)
-    tools = build_tools(Path.cwd())
+    tools = build_tools(workspace_root)
     agent = create_agent(
         model=llm,
         tools=tools,
@@ -89,7 +91,12 @@ def main() -> None:
     )
     messages = []
 
-    console.print(Panel.fit(f"Forge Agent\nModel: {config.model}\nType 'exit' or 'quit' to stop.", title="Ready"))
+    console.print(
+        Panel.fit(
+            f"Forge Agent\nWorkspace: {workspace_root}\nModel: {config.model}\nType 'exit' or 'quit' to stop.",
+            title="Ready",
+        )
+    )
 
     while True:
         query = Prompt.ask("[bold cyan]You[/bold cyan]").strip()

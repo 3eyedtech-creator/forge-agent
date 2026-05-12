@@ -2,7 +2,7 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from text_search_tool import search_text
+from forge_agent.text_search_tool import search_text
 
 
 class TextSearchToolTests(unittest.TestCase):

@@ -2,8 +2,8 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from policy_engine import ApprovalResponse
-from shell_command_tool import ShellCommandError, run_shell_command
+from forge_agent.policy_engine import ApprovalResponse
+from forge_agent.shell_command_tool import ShellCommandError, run_shell_command
 
 
 class ShellCommandToolTests(unittest.TestCase):

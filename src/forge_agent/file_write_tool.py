@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 
-from path_utils import resolve_workspace_path
+from forge_agent.path_utils import resolve_workspace_path
 
 
 class FileWriteError(ValueError):

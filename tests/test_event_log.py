@@ -1,7 +1,7 @@
 import json
 import unittest
 
-from event_log import create_event, write_event
+from forge_agent.event_log import create_event, write_event
 
 
 class EventLogTests(unittest.TestCase):

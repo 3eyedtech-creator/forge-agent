@@ -1,7 +1,7 @@
 from rich.console import Console
 from rich.prompt import Confirm
 
-from policy_engine import ApprovalResponse
+from forge_agent.policy_engine import ApprovalResponse
 
 
 def ask_for_approval(command: str, reason: str, console: Console) -> ApprovalResponse:

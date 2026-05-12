@@ -639,16 +639,16 @@ Budget policies:
 
 ### CA-001: Scaffold Monorepo
 
-**Goal:** Create the smallest plain-Python starting point for a local agent.
+**Goal:** Create an installable Python CLI package for a local agent.
 
 **Priority:** P0  
 **Dependencies:** None  
-**Modules:** minimal CLI only; broader module layout comes later.
+**Modules:** `src/forge_agent`, CLI entrypoint, tools, policy, event logging.
 
 **Acceptance Criteria:**
 
-- `python -m venv .venv` and `pip install -r requirements.txt` set up local development.
-- A user can run a Python script, type queries in an interactive loop, and receive responses from OpenAI through a LangChain agent.
+- `python -m venv .venv` and `pip install -e .` set up local development.
+- A user can run `forge` from any terminal workspace, type queries in an interactive loop, and receive responses from OpenAI through a LangChain agent.
 - The code uses the current `langchain-openai` `ChatOpenAI` interface.
 - The code uses the current LangChain `create_agent` interface for the agent runtime.
 - The command line uses Rich for readable prompts and responses.
@@ -657,9 +657,9 @@ Budget policies:
 
 **Implementation Notes:**
 
-- Keep this first step intentionally simple: no `pyproject.toml`, no package layout, no tests, no Ruff, and no mypy yet.
-- Start with one small Python entry script so each line can be understood before adding structure.
-- Add tests and formal packaging in a later story once the basic model call is clear.
+- Use `pyproject.toml` to expose a `forge` console command.
+- Use a `src/forge_agent` Python package layout.
+- Keep the command behavior simple while making installation realistic.
 
 ---
 
@@ -709,9 +709,9 @@ Budget policies:
 
 **Acceptance Criteria:**
 
-- `forge --help` lists available commands.
-- `forge doctor` checks Python version, pip/virtualenv availability, git availability, OpenAI environment configuration, and workspace root.
-- `forge chat` starts an interactive session.
+- `forge` starts an interactive session from the current workspace.
+- The current terminal directory is treated as the workspace root.
+- `forge --help`, `forge doctor`, and `forge chat` are deferred until a multi-command CLI framework is introduced.
 - CLI exits with useful codes on errors.
 
 ---
