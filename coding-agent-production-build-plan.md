@@ -673,10 +673,10 @@ Budget policies:
 **Acceptance Criteria:**
 
 - Loads config from `.forge-agent/config.toml`.
-- Loads user-level config from home directory.
-- Validates config with Pydantic.
-- Supports OpenAI model name, command policy, token budgets, memory settings, and LangGraph recursion limits.
-- Invalid config produces actionable error messages.
+- Loads the OpenAI model name from `.forge-agent/config.toml`.
+- Defaults to `gpt-4.1-mini` when the workspace config file is missing.
+- Later slices will add user-level config, Pydantic validation, command policy, token budgets, memory settings, and LangGraph recursion limits.
+- Invalid config handling will become stricter when Pydantic validation is introduced.
 
 ---
 

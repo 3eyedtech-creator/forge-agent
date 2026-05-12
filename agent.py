@@ -1,4 +1,7 @@
 import os
+import tomllib
+from dataclasses import dataclass
+from pathlib import Path
 
 from dotenv import load_dotenv
 from langchain.agents import create_agent
@@ -9,6 +12,23 @@ from rich.prompt import Prompt
 
 
 console = Console()
+CONFIG_PATH = Path(".forge-agent") / "config.toml"
+DEFAULT_MODEL = "gpt-4.1-mini"
+
+
+@dataclass
+class AgentConfig:
+    model: str = DEFAULT_MODEL
+
+
+def load_config() -> AgentConfig:
+    if not CONFIG_PATH.exists():
+        return AgentConfig()
+
+    with CONFIG_PATH.open("rb") as config_file:
+        data = tomllib.load(config_file)
+
+    return AgentConfig(model=data.get("model", DEFAULT_MODEL))
 
 
 def get_last_message_text(result: dict) -> str:
@@ -28,7 +48,8 @@ def main() -> None:
         console.print("[red]OPENAI_API_KEY is not set. Add it to a .env file before running the agent.[/red]")
         return
 
-    llm = ChatOpenAI(model="gpt-4.1-mini")
+    config = load_config()
+    llm = ChatOpenAI(model=config.model)
     agent = create_agent(
         model=llm,
         tools=[],
@@ -36,7 +57,7 @@ def main() -> None:
     )
     messages = []
 
-    console.print(Panel.fit("Forge Agent\nType 'exit' or 'quit' to stop.", title="Ready"))
+    console.print(Panel.fit(f"Forge Agent\nModel: {config.model}\nType 'exit' or 'quit' to stop.", title="Ready"))
 
     while True:
         query = Prompt.ask("[bold cyan]You[/bold cyan]").strip()
