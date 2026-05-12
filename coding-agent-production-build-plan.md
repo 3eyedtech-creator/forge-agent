@@ -795,9 +795,10 @@ Budget policies:
 **Acceptance Criteria:**
 
 - Lists workspace files recursively.
-- Respects `.gitignore` and configured ignore patterns.
-- Excludes dependency directories by default.
-- Supports extension and path filters.
+- Initial slice lists workspace files recursively.
+- Initial slice excludes common dependency and cache directories by default.
+- Initial slice supports extension filters.
+- Later slices will add `.gitignore`, configured ignore patterns, and path filters.
 
 ---
 
@@ -810,10 +811,10 @@ Budget policies:
 
 **Acceptance Criteria:**
 
-- Uses `ripgrep` when available.
-- Falls back to a Python search implementation.
-- Returns path, line number, matched line, and surrounding context.
-- Enforces output limits to prevent context flooding.
+- Initial slice uses a Python search implementation.
+- Initial slice returns path, line number, matched line, and surrounding context.
+- Initial slice enforces a max match count to prevent context flooding.
+- Later slices will use `ripgrep` when available and fall back to Python search.
 
 ---
 
