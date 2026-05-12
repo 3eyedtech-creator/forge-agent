@@ -1017,6 +1017,8 @@ Budget policies:
 - Score chunks using filename/path matches and content matches.
 - Return ranked context items with path, line range, content, score, reason, and token estimate.
 - Limit results by item count.
+- Expose retrieval as an LLM-callable `retrieve_workspace_context` tool instead of injecting repository context into every prompt.
+- The retrieval tool lazily builds the workspace index when `.forge-agent/index.sqlite` is missing.
 - Later slices will add symbol search, richer metadata signals, and token-budget limits.
 
 ---

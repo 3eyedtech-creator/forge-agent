@@ -7,6 +7,7 @@ from forge_agent.agent_tools import (
     run_edit_file_tool,
     run_list_files_tool,
     run_read_file_tool,
+    run_retrieve_context_tool,
     run_search_text_tool,
     run_write_file_tool,
 )
@@ -69,6 +70,26 @@ class AgentToolsTests(unittest.TestCase):
 
             self.assertEqual((workspace / "notes.txt").read_text(encoding="utf-8"), "new text")
         self.assertEqual(output, "File edited: notes.txt")
+
+    def test_retrieve_context_tool_builds_index_and_returns_context(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            workspace = Path(temp_dir)
+            (workspace / "auth.py").write_text("def login_user():\n    pass\n", encoding="utf-8")
+
+            output = run_retrieve_context_tool(workspace, "login")
+
+        self.assertIn("Relevant repository context:", output)
+        self.assertIn("File: auth.py", output)
+        self.assertIn("login_user", output)
+
+    def test_retrieve_context_tool_handles_no_matches(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            workspace = Path(temp_dir)
+            (workspace / "auth.py").write_text("def login_user():\n    pass\n", encoding="utf-8")
+
+            output = run_retrieve_context_tool(workspace, "billing")
+
+        self.assertEqual(output, "No relevant repository context was retrieved.")
 
 
 if __name__ == "__main__":
