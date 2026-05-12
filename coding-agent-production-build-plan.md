@@ -1037,6 +1037,14 @@ Budget policies:
 - Generates multiple search queries per user request.
 - Unit tests cover common developer prompts.
 
+**Initial Slice:**
+
+- Add deterministic query understanding without model calls.
+- Detect task type from keyword rules.
+- Extract search terms with simple stop-word removal.
+- Extract quoted phrases, likely file paths, and likely test terms.
+- Later slices will generate multiple retrieval queries and extract symbols/error messages more precisely.
+
 ---
 
 ### CA-052: Implement Context Manager
