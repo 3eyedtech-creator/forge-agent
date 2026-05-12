@@ -55,6 +55,37 @@ class RetrievalEngineTests(unittest.TestCase):
 
         self.assertEqual(len(results), 1)
 
+    def test_uses_likely_path_for_scoring(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            store = make_store(Path(temp_dir))
+            store.replace_index(
+                [make_file("src/auth/login.py"), make_file("src/other.py")],
+                [
+                    make_chunk("src/auth/login.py", "1: def unrelated(): pass"),
+                    make_chunk("src/other.py", "1: login login login"),
+                ],
+            )
+
+            results = retrieve_context(store, "open src/auth/login.py")
+
+        self.assertEqual(results[0].path, "src/auth/login.py")
+        self.assertIn("likely path", results[0].reason)
+
+    def test_prefers_test_files_for_test_queries(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            store = make_store(Path(temp_dir))
+            store.replace_index(
+                [make_file("app.py"), make_file("test_app.py", kind="test")],
+                [
+                    make_chunk("app.py", "1: login"),
+                    make_chunk("test_app.py", "1: login"),
+                ],
+            )
+
+            results = retrieve_context(store, "fix login test")
+
+        self.assertEqual(results[0].path, "test_app.py")
+
 
 def make_store(root: Path) -> IndexStore:
     store = IndexStore(root / "index.sqlite")
@@ -62,14 +93,14 @@ def make_store(root: Path) -> IndexStore:
     return store
 
 
-def make_file(path: str) -> FileMetadata:
+def make_file(path: str, kind: str = "source") -> FileMetadata:
     return FileMetadata(
         path=path,
         extension=Path(path).suffix,
         size_bytes=1,
         modified_time=1.0,
         language="python",
-        kind="source",
+        kind=kind,
     )
 
 
