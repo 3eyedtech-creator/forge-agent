@@ -1200,6 +1200,15 @@ Budget policies:
 - Creates parent directories only when explicitly requested.
 - Records changed files and diff summary.
 
+**Initial Slice:**
+
+- Add simple file create, full-file write, and exact-text edit primitives.
+- All file mutation paths are resolved through the workspace path safety utility.
+- `create_file` refuses to overwrite existing files.
+- `write_file` requires the file to already exist.
+- `edit_file` replaces one exact text occurrence.
+- Later slices will replace exact-text editing with unified-diff style patch application, stale-file checks, and diff summaries.
+
 ---
 
 ### CA-081: Implement Edit Validation
