@@ -17,16 +17,19 @@ from rich.prompt import Prompt
 from forge_agent.agent_tools import build_tools
 from forge_agent.event_log import create_event, write_event
 from forge_agent.human_review import ask_for_tool_decisions, has_rejection
+from forge_agent.model_router import ModelSelection, route_model
 from forge_agent.slash_commands import SlashCommandState, handle_slash_command
 
 
 console = Console()
 DEFAULT_MODEL = "gpt-4.1-mini"
+DEFAULT_REASONING_MODEL = "gpt-4.1"
 
 
 @dataclass
 class AgentConfig:
-    model: str = DEFAULT_MODEL
+    fast_model: str = DEFAULT_MODEL
+    reasoning_model: str = DEFAULT_REASONING_MODEL
 
 
 def load_config(workspace_root: Path) -> AgentConfig:
@@ -38,7 +41,9 @@ def load_config(workspace_root: Path) -> AgentConfig:
     with config_path.open("rb") as config_file:
         data = tomllib.load(config_file)
 
-    return AgentConfig(model=data.get("model", DEFAULT_MODEL))
+    fast_model = data.get("fast_model", data.get("model", DEFAULT_MODEL))
+    reasoning_model = data.get("reasoning_model", fast_model)
+    return AgentConfig(fast_model=fast_model, reasoning_model=reasoning_model)
 
 
 def get_last_message_text(result: dict) -> str:
@@ -54,6 +59,18 @@ def get_last_message_text(result: dict) -> str:
     return str(content)
 
 
+def build_system_prompt(selection: ModelSelection) -> str:
+    prompt = (
+        "You are a helpful coding agent. Keep answers clear and concise. "
+        "Use workspace tools when you need to inspect local files."
+    )
+
+    if selection.should_plan:
+        prompt += " For complex tasks, first break the work into smaller steps before making changes."
+
+    return prompt
+
+
 def main() -> None:
     workspace_root = Path.cwd().resolve()
     load_dotenv(dotenv_path=workspace_root / ".env", override=True)
@@ -63,38 +80,20 @@ def main() -> None:
         return
 
     config = load_config(workspace_root)
-    session_event = create_event("session_started", {"model": config.model})
+    session_event = create_event(
+        "session_started",
+        {"fast_model": config.fast_model, "reasoning_model": config.reasoning_model},
+    )
     write_event(session_event)
 
-    llm = ChatOpenAI(model=config.model)
     tools = build_tools(workspace_root)
-    agent = create_agent(
-        model=llm,
-        tools=tools,
-        middleware=[
-            HumanInTheLoopMiddleware(
-                interrupt_on={
-                    "list_workspace_files": False,
-                    "read_workspace_file": False,
-                    "search_workspace_text": False,
-                    "create_workspace_file": {"allowed_decisions": ["approve", "reject"]},
-                    "write_workspace_file": {"allowed_decisions": ["approve", "reject"]},
-                    "edit_workspace_file": {"allowed_decisions": ["approve", "reject"]},
-                },
-                description_prefix="Tool execution pending approval",
-            )
-        ],
-        checkpointer=InMemorySaver(),
-        system_prompt=(
-            "You are a helpful coding agent. Keep answers clear and concise. "
-            "Use workspace tools when you need to inspect local files."
-        ),
-    )
     messages = []
 
     console.print(
         Panel.fit(
-            f"Forge Agent\nWorkspace: {workspace_root}\nModel: {config.model}\nType 'exit' or 'quit' to stop.",
+            f"Forge Agent\nWorkspace: {workspace_root}\n"
+            f"Fast model: {config.fast_model}\nReasoning model: {config.reasoning_model}\n"
+            "Type 'exit' or 'quit' to stop.",
             title="Ready",
         )
     )
@@ -115,7 +114,7 @@ def main() -> None:
                 query,
                 SlashCommandState(
                     workspace_root=workspace_root,
-                    model=config.model,
+                    model=f"{config.fast_model} / {config.reasoning_model}",
                     message_count=len(messages),
                 ),
             )
@@ -131,6 +130,33 @@ def main() -> None:
 
         write_event(create_event("user_message", {"content": query}))
         messages.append({"role": "user", "content": query})
+        selection = route_model(query, config.fast_model, config.reasoning_model)
+        console.print(
+            f"[dim]Using {selection.task_complexity} route: {selection.model} ({selection.reason})[/dim]"
+        )
+
+        llm = ChatOpenAI(model=selection.model)
+        agent = create_agent(
+            model=llm,
+            tools=tools,
+            middleware=[
+                HumanInTheLoopMiddleware(
+                    interrupt_on={
+                        "list_workspace_files": False,
+                        "read_workspace_file": False,
+                        "search_workspace_text": False,
+                        "retrieve_workspace_context": False,
+                        "create_workspace_file": {"allowed_decisions": ["approve", "reject"]},
+                        "write_workspace_file": {"allowed_decisions": ["approve", "reject"]},
+                        "edit_workspace_file": {"allowed_decisions": ["approve", "reject"]},
+                    },
+                    description_prefix="Tool execution pending approval",
+                )
+            ],
+            checkpointer=InMemorySaver(),
+            system_prompt=build_system_prompt(selection),
+        )
+
         agent_config = {"configurable": {"thread_id": f"forge-agent-local-{uuid4().hex}"}}
         result = agent.invoke({"messages": messages}, config=agent_config, version="v2")
 

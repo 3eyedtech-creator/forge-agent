@@ -1187,6 +1187,22 @@ Budget policies:
 
 ## Epic H: Agent Orchestration
 
+### CA-069: Implement Model Routing
+
+**Goal:** Choose between a fast model and a reasoning model per user query.
+
+**Initial Slice:**
+
+- Add deterministic model routing from query keywords.
+- Route simple queries to the configured fast model.
+- Route implementation, debugging, refactor, architecture, and multi-file queries to the configured reasoning model.
+- Mark complex tasks as needing planning.
+- Create the LangChain agent per user query using the selected model.
+- Add a planning instruction to the system prompt when the selected route marks the task as complex.
+- Later slices will add LLM-based routing, structured task planning, and step-by-step execution.
+
+---
+
 ### CA-070: Implement Task State
 
 **Goal:** Represent the current task and working state.

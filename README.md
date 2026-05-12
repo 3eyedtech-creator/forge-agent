@@ -27,10 +27,11 @@ Create a `.env` file by copying `.env.example`, then add your real OpenAI API ke
 Copy-Item .env.example .env
 ```
 
-The model name is configured in `.forge-agent/config.toml`:
+Model routing is configured in `.forge-agent/config.toml`:
 
 ```toml
-model = "gpt-4.1-mini"
+fast_model = "gpt-4.1-mini"
+reasoning_model = "gpt-4.1"
 ```
 
 Run the agent:
