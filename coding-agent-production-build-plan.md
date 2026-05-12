@@ -878,7 +878,13 @@ Budget policies:
 - Allow obvious read-only commands such as `git status`.
 - Block destructive commands such as `git reset --hard`, `rm`, `del`, and `rmdir`.
 - Require approval for everything else.
-- Later slices will add file policy checks, human-readable decision reasons, and secret-read blocking.
+- Add a small human approval prompt for approval-required actions.
+- Add LangChain `HumanInTheLoopMiddleware` for write/edit/create workspace file tools.
+- Add an in-memory LangGraph checkpointer and thread ID for local interrupt/resume.
+- Support approve/reject decisions for sensitive file mutation tools.
+- If the user rejects a tool call, stop the current turn instead of resuming the model and allowing repeated approval prompts.
+- Use a fresh LangGraph thread ID for each user turn so abandoned interrupts do not affect later turns.
+- Later slices will add file policy checks, richer human-readable decision reasons, scoped approvals, and secret-read blocking.
 
 ---
 
@@ -1260,6 +1266,15 @@ Budget policies:
 - Enforces timeout.
 - Applies command policy before execution.
 - Trims large output while preserving useful error excerpts.
+
+**Initial Slice:**
+
+- Add a policy-guarded shell command runner.
+- Commands run with working directory set to the workspace root.
+- Captures stdout, stderr, and exit code.
+- Enforces a timeout.
+- Blocks policy-denied commands and requires approval for risky commands.
+- Later slices will add duration tracking, output trimming, and CLI approval integration for agent-triggered commands.
 
 ---
 

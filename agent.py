@@ -2,15 +2,21 @@ import os
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
+from uuid import uuid4
 
 from agent_tools import build_tools
 from dotenv import load_dotenv
 from event_log import create_event, write_event
 from langchain.agents import create_agent
+from langchain.agents.middleware import HumanInTheLoopMiddleware
 from langchain_openai import ChatOpenAI
+from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.types import Command
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
+
+from human_review import ask_for_tool_decisions, has_rejection
 
 
 console = Console()
@@ -34,6 +40,9 @@ def load_config() -> AgentConfig:
 
 
 def get_last_message_text(result: dict) -> str:
+    if hasattr(result, "value"):
+        result = result.value
+
     last_message = result["messages"][-1]
     content = last_message.content
 
@@ -59,6 +68,20 @@ def main() -> None:
     agent = create_agent(
         model=llm,
         tools=tools,
+        middleware=[
+            HumanInTheLoopMiddleware(
+                interrupt_on={
+                    "list_workspace_files": False,
+                    "read_workspace_file": False,
+                    "search_workspace_text": False,
+                    "create_workspace_file": {"allowed_decisions": ["approve", "reject"]},
+                    "write_workspace_file": {"allowed_decisions": ["approve", "reject"]},
+                    "edit_workspace_file": {"allowed_decisions": ["approve", "reject"]},
+                },
+                description_prefix="Tool execution pending approval",
+            )
+        ],
+        checkpointer=InMemorySaver(),
         system_prompt=(
             "You are a helpful coding agent. Keep answers clear and concise. "
             "Use workspace tools when you need to inspect local files."
@@ -81,8 +104,22 @@ def main() -> None:
 
         write_event(create_event("user_message", {"content": query}))
         messages.append({"role": "user", "content": query})
-        result = agent.invoke({"messages": messages})
-        answer = get_last_message_text(result)
+        agent_config = {"configurable": {"thread_id": f"forge-agent-local-{uuid4().hex}"}}
+        result = agent.invoke({"messages": messages}, config=agent_config, version="v2")
+
+        while getattr(result, "interrupts", None):
+            decisions = ask_for_tool_decisions(result.interrupts, console)
+            if has_rejection(decisions):
+                answer = "Tool call rejected. I did not run the requested action."
+                break
+
+            result = agent.invoke(
+                Command(resume={"decisions": decisions}),
+                config=agent_config,
+                version="v2",
+            )
+        else:
+            answer = get_last_message_text(result)
 
         write_event(create_event("assistant_message", {"content": answer}))
         messages.append({"role": "assistant", "content": answer})

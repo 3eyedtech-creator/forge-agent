@@ -8,6 +8,11 @@ class PolicyDecision(str, Enum):
     BLOCK = "block"
 
 
+class ApprovalResponse(str, Enum):
+    APPROVE = "approve"
+    DENY = "deny"
+
+
 SAFE_READ_COMMANDS = {
     ("dir",),
     ("git", "diff"),
@@ -40,3 +45,13 @@ def decide_shell_command(command: str) -> PolicyDecision:
             return PolicyDecision.BLOCK
 
     return PolicyDecision.REQUIRE_APPROVAL
+
+
+def resolve_policy_decision(decision: PolicyDecision, approval: ApprovalResponse | None = None) -> PolicyDecision:
+    if decision != PolicyDecision.REQUIRE_APPROVAL:
+        return decision
+
+    if approval == ApprovalResponse.APPROVE:
+        return PolicyDecision.ALLOW
+
+    return PolicyDecision.BLOCK
