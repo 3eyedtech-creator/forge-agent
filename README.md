@@ -43,6 +43,19 @@ Type `exit` or `quit` to stop the chat loop.
 
 The agent writes a local JSONL event log to `.forge-agent/events.jsonl`.
 
+## Slash Commands
+
+Slash commands are handled locally and are not sent to the model:
+
+```text
+/help
+/status
+/index
+/retrieve <query>
+/clear
+/exit
+```
+
 To use the agent in another repository, open a terminal in that repository and run:
 
 ```powershell

@@ -17,6 +17,7 @@ from rich.prompt import Prompt
 from forge_agent.agent_tools import build_tools
 from forge_agent.event_log import create_event, write_event
 from forge_agent.human_review import ask_for_tool_decisions, has_rejection
+from forge_agent.slash_commands import SlashCommandState, handle_slash_command
 
 
 console = Console()
@@ -107,6 +108,25 @@ def main() -> None:
 
         if not query:
             console.print("[yellow]Please enter a question.[/yellow]")
+            continue
+
+        if query.startswith("/"):
+            slash_result = handle_slash_command(
+                query,
+                SlashCommandState(
+                    workspace_root=workspace_root,
+                    model=config.model,
+                    message_count=len(messages),
+                ),
+            )
+            console.print(Panel(slash_result.output, title="Command", border_style="blue"))
+
+            if slash_result.should_clear_messages:
+                messages.clear()
+
+            if slash_result.should_exit:
+                break
+
             continue
 
         write_event(create_event("user_message", {"content": query}))

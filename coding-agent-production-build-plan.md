@@ -714,6 +714,13 @@ Budget policies:
 - `forge --help`, `forge doctor`, and `forge chat` are deferred until a multi-command CLI framework is introduced.
 - CLI exits with useful codes on errors.
 
+**Slash Command Slice:**
+
+- Add local slash commands handled before model calls.
+- Support `/help`, `/status`, `/index`, `/retrieve <query>`, `/clear`, and `/exit`.
+- `/index` rebuilds the workspace SQLite index.
+- `/retrieve` shows retrieval output directly for debugging and learning.
+
 ---
 
 ### CA-011: Implement Interactive Chat Loop
@@ -975,6 +982,12 @@ Budget policies:
 - Extracts Python functions, classes, methods, imports, and module-level constants.
 - Stores symbol name, kind, path, and line range.
 - Includes tests for representative fixture files.
+
+**Planned Direction:**
+
+- Implement a Tree-sitter-based symbol indexing architecture later instead of committing to a regex-first multi-language approach.
+- Start with a generic Tree-sitter extraction engine and add language query configs incrementally.
+- Revisit this after the core model routing, planning, retrieval, and execution loop are more mature.
 
 ---
 
