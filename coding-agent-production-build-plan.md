@@ -648,8 +648,10 @@ Budget policies:
 **Acceptance Criteria:**
 
 - `python -m venv .venv` and `pip install -r requirements.txt` set up local development.
-- A user can run a Python script, type a query, and receive a response from OpenAI through LangChain.
+- A user can run a Python script, type queries in an interactive loop, and receive responses from OpenAI through a LangChain agent.
 - The code uses the current `langchain-openai` `ChatOpenAI` interface.
+- The code uses the current LangChain `create_agent` interface for the agent runtime.
+- The command line uses Rich for readable prompts and responses.
 - The script loads `.env` with `python-dotenv`, reads `OPENAI_API_KEY`, and shows a clear error if it is missing.
 - README explains the minimal local setup and run command.
 

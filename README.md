@@ -2,7 +2,7 @@
 
 This is a small learning project for building a local coding agent from scratch.
 
-The first version is intentionally simple: it asks for one query, sends it to OpenAI through LangChain, and prints the response.
+The current version is intentionally simple: it starts an interactive terminal loop, sends your messages to a LangChain agent backed by OpenAI, and prints responses with Rich.
 
 ## Setup
 
@@ -30,3 +30,5 @@ Run the agent:
 ```powershell
 python agent.py
 ```
+
+Type `exit` or `quit` to stop the chat loop.
