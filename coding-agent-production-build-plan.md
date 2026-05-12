@@ -904,6 +904,15 @@ Budget policies:
 - Respects ignore rules.
 - Produces file metadata: path, extension, size, modified time, language guess.
 
+**Initial Slice:**
+
+- Scan workspace files recursively.
+- Reuse common excluded directories from the file list tool.
+- Produce metadata with relative path, extension, size, modified time, language, and kind.
+- Detect common languages including Python, JavaScript, TypeScript, Go, Rust, Java, Kotlin, C#, C/C++, HTML, CSS, SQL, shell, JSON, YAML, TOML, Markdown, and text.
+- Classify common docs, config files, source files, and test files across popular ecosystems.
+- Later slices will add git-root detection, project-manager detection, and `.gitignore` support.
+
 ---
 
 ### CA-041: Implement SQLite Index Store
@@ -935,6 +944,13 @@ Budget policies:
 - Falls back to line-based chunks for unsupported files.
 - Includes file path, line range, language, and chunk type.
 - Avoids chunks that exceed configured token estimates.
+
+**Initial Slice:**
+
+- Add language-agnostic line-range chunking.
+- Include path, start line, end line, line-numbered content, language, chunk type, and rough token estimate.
+- Skip oversized files and non-UTF-8 files.
+- Later slices will add function/class-aware chunking for selected languages and stronger token budgeting.
 
 ---
 
