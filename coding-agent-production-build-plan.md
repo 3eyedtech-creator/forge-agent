@@ -762,8 +762,9 @@ Budget policies:
 
 - Resolves paths relative to workspace root.
 - Blocks path traversal outside allowed roots.
-- Handles Windows, macOS, and Linux path differences.
-- Unit tests cover symlinks, absolute paths, relative paths, and case differences.
+- Initial slice handles relative paths, absolute paths inside the workspace, and paths outside the workspace.
+- Later slices will expand coverage for symlinks, Windows/macOS/Linux edge cases, and case differences.
+- Unit tests cover the initial safe path behavior.
 
 ---
 
@@ -778,9 +779,9 @@ Budget policies:
 
 - Reads text files with line numbers.
 - Enforces max file size.
-- Detects likely binary files.
-- Returns structured errors for missing, blocked, and oversized files.
-- Records file reads in event log.
+- Initial slice reads UTF-8 text files with line numbers and enforces max file size.
+- Initial slice returns structured Python objects and raises clear errors for missing, blocked, oversized, and non-UTF-8 files.
+- Later slices will add stronger binary detection and event-log integration for file reads.
 
 ---
 
