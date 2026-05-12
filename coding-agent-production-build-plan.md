@@ -929,6 +929,14 @@ Budget policies:
 - Supports schema migrations.
 - Can rebuild index from scratch.
 
+**Initial Slice:**
+
+- Add a SQLite-backed index store.
+- Store file metadata and text chunks.
+- Support replacing the full index on rebuild.
+- Support loading files and chunks back for retrieval.
+- Later slices will add symbols, tests, metadata tables, and schema migrations.
+
 ---
 
 ### CA-042: Implement Text Chunking
