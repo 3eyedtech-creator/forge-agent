@@ -1010,6 +1010,15 @@ Budget policies:
 - Includes retrieval reason for each item.
 - Supports limits by token estimate and item count.
 
+**Initial Slice:**
+
+- Load chunks from the SQLite index store.
+- Tokenize the user query.
+- Score chunks using filename/path matches and content matches.
+- Return ranked context items with path, line range, content, score, reason, and token estimate.
+- Limit results by item count.
+- Later slices will add symbol search, richer metadata signals, and token-budget limits.
+
 ---
 
 ### CA-051: Implement Query Understanding
