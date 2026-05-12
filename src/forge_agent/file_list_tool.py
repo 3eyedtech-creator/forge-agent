@@ -3,6 +3,7 @@ from pathlib import Path
 
 
 DEFAULT_EXCLUDED_DIRS = {
+    ".forge-agent",
     ".git",
     ".venv",
     "__pycache__",

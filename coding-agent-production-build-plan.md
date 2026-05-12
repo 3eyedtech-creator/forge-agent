@@ -935,6 +935,7 @@ Budget policies:
 - Store file metadata and text chunks.
 - Support replacing the full index on rebuild.
 - Support loading files and chunks back for retrieval.
+- Add an index builder that combines repository scanning, chunking, and SQLite persistence.
 - Later slices will add symbols, tests, metadata tables, and schema migrations.
 
 ---

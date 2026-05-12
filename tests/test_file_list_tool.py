@@ -23,6 +23,8 @@ class FileListToolTests(unittest.TestCase):
             (workspace / "agent.py").write_text("", encoding="utf-8")
             (workspace / ".venv").mkdir()
             (workspace / ".venv" / "ignored.py").write_text("", encoding="utf-8")
+            (workspace / ".forge-agent").mkdir()
+            (workspace / ".forge-agent" / "index.sqlite").write_text("", encoding="utf-8")
             (workspace / "__pycache__").mkdir()
             (workspace / "__pycache__" / "ignored.pyc").write_text("", encoding="utf-8")
 
