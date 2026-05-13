@@ -54,6 +54,12 @@ Slash commands are handled locally and are not sent to the model:
 /status
 /index
 /retrieve <query>
+/memory add <text>
+/memory list
+/memory clear
+/session show
+/session path
+/session clear
 /clear
 /exit
 ```

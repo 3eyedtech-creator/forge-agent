@@ -1427,6 +1427,8 @@ Budget policies:
 - Add JSON-backed short-term session memory under `.forge-agent/sessions/current.json`.
 - Store session ID, workspace root, timestamps, and chat messages.
 - Support load/create, save, append message, and clear messages.
+- Add slash commands to inspect short-term session memory: `/session show`, `/session path`, and `/session clear`.
+- Keep `/clear` as an alias for `/session clear`.
 - Later slices will add inspected files, tool outputs, plans, edits, and observation summaries.
 
 ---
@@ -1444,6 +1446,13 @@ Budget policies:
 - Supports lookup by workspace and user.
 - Supports delete and list operations.
 - Does not automatically store secrets.
+
+**Initial Slice:**
+
+- Add JSONL-backed workspace memory under `.forge-agent/memory.jsonl`.
+- Support manual add, list, and clear operations.
+- Store ID, scope, kind, text, confidence, source, and creation timestamp.
+- Later slices will add delete-by-ID, search, conflict handling, and user-approved automatic memory extraction.
 
 ---
 

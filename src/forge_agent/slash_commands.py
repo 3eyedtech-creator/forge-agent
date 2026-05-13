@@ -3,6 +3,8 @@ from pathlib import Path
 
 from forge_agent.agent_tools import run_retrieve_context_tool
 from forge_agent.index_builder import build_index
+from forge_agent.long_term_memory import add_memory, clear_memories, list_memories
+from forge_agent.session_memory import get_session_path
 
 
 @dataclass
@@ -10,6 +12,7 @@ class SlashCommandState:
     workspace_root: Path
     model: str
     message_count: int
+    messages: list[dict[str, str]] | None = None
 
 
 @dataclass
@@ -24,6 +27,12 @@ HELP_TEXT = """Available commands:
 /status               Show workspace, model, and message count
 /index                Rebuild the workspace index
 /retrieve <query>     Show retrieved repository context for a query
+/memory add <text>    Save a workspace memory
+/memory list          List workspace memories
+/memory clear         Clear workspace memories
+/session show        Show current short-term session messages
+/session path        Show current session file path
+/session clear       Clear current session messages
 /clear                Clear chat memory
 /exit                 Exit the agent
 """
@@ -61,7 +70,42 @@ def handle_slash_command(command: str, state: SlashCommandState) -> SlashCommand
             return SlashCommandResult(output="Usage: /retrieve <query>")
         return SlashCommandResult(output=run_retrieve_context_tool(state.workspace_root, query))
 
-    if command == "/clear":
+    if command.startswith("/memory add "):
+        text = command.removeprefix("/memory add ").strip()
+        if not text:
+            return SlashCommandResult(output="Usage: /memory add <text>")
+        memory = add_memory(state.workspace_root, text)
+        return SlashCommandResult(output=f"Memory added: {memory.id}")
+
+    if command == "/memory list":
+        memories = list_memories(state.workspace_root)
+        if not memories:
+            return SlashCommandResult(output="No memories found.")
+
+        lines = [
+            f"{memory.id} [{memory.scope}/{memory.kind}] {memory.text}"
+            for memory in memories
+        ]
+        return SlashCommandResult(output="\n".join(lines))
+
+    if command == "/memory clear":
+        clear_memories(state.workspace_root)
+        return SlashCommandResult(output="Memories cleared.")
+
+    if command == "/session show":
+        if not state.messages:
+            return SlashCommandResult(output="No session messages found.")
+
+        lines = [
+            f"{message.get('role', 'unknown')}: {message.get('content', '')}"
+            for message in state.messages
+        ]
+        return SlashCommandResult(output="\n".join(lines))
+
+    if command == "/session path":
+        return SlashCommandResult(output=str(get_session_path(state.workspace_root)))
+
+    if command in {"/clear", "/session clear"}:
         return SlashCommandResult(output="Chat memory cleared.", should_clear_messages=True)
 
     if command in {"/exit", "/quit"}:

@@ -118,6 +118,7 @@ def main() -> None:
                     workspace_root=workspace_root,
                     model=f"{config.fast_model} / {config.reasoning_model}",
                     message_count=len(messages),
+                    messages=messages,
                 ),
             )
             console.print(Panel(slash_result.output, title="Command", border_style="blue"))
