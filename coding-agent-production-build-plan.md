@@ -1452,6 +1452,8 @@ Budget policies:
 - Add JSONL-backed workspace memory under `.forge-agent/memory.jsonl`.
 - Support manual add, list, and clear operations.
 - Store ID, scope, kind, text, confidence, source, and creation timestamp.
+- Add memory retrieval by query using simple token scoring.
+- Expose long-term memory retrieval as a read-only `retrieve_workspace_memories` agent tool.
 - Later slices will add delete-by-ID, search, conflict handling, and user-approved automatic memory extraction.
 
 ---

@@ -151,6 +151,7 @@ def main() -> None:
                         "read_workspace_file": False,
                         "search_workspace_text": False,
                         "retrieve_workspace_context": False,
+                        "retrieve_workspace_memories": False,
                         "create_workspace_file": {"allowed_decisions": ["approve", "reject"]},
                         "write_workspace_file": {"allowed_decisions": ["approve", "reject"]},
                         "edit_workspace_file": {"allowed_decisions": ["approve", "reject"]},

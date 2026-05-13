@@ -6,6 +6,7 @@ from forge_agent.file_read_tool import read_text_file
 from forge_agent.file_write_tool import create_file, edit_file, write_file
 from forge_agent.index_builder import build_index
 from forge_agent.index_store import IndexStore
+from forge_agent.long_term_memory import retrieve_memories
 from forge_agent.retrieval_engine import retrieve_context
 from forge_agent.text_search_tool import search_text
 
@@ -48,6 +49,18 @@ def run_retrieve_context_tool(workspace_root: Path, query: str) -> str:
     return build_context_section(items)
 
 
+def run_retrieve_memories_tool(workspace_root: Path, query: str) -> str:
+    memories = retrieve_memories(workspace_root, query)
+
+    if not memories:
+        return "No relevant memories found."
+
+    return "\n".join(
+        f"{memory.id} [{memory.scope}/{memory.kind}] {memory.text}"
+        for memory in memories
+    )
+
+
 def run_create_file_tool(workspace_root: Path, path: str, content: str) -> str:
     result = create_file(workspace_root, path, content)
     return f"{result.message.removesuffix('.')}: {result.path}"
@@ -87,6 +100,11 @@ def build_tools(workspace_root: Path) -> list:
         return run_retrieve_context_tool(workspace_root, query)
 
     @tool
+    def retrieve_workspace_memories(query: str) -> str:
+        """Retrieve relevant long-term workspace memories for a query."""
+        return run_retrieve_memories_tool(workspace_root, query)
+
+    @tool
     def create_workspace_file(path: str, content: str) -> str:
         """Create a new UTF-8 text file in the current workspace."""
         return run_create_file_tool(workspace_root, path, content)
@@ -106,6 +124,7 @@ def build_tools(workspace_root: Path) -> list:
         read_workspace_file,
         search_workspace_text,
         retrieve_workspace_context,
+        retrieve_workspace_memories,
         create_workspace_file,
         write_workspace_file,
         edit_workspace_file,

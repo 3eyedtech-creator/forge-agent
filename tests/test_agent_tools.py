@@ -7,6 +7,7 @@ from forge_agent.agent_tools import (
     run_edit_file_tool,
     run_list_files_tool,
     run_read_file_tool,
+    run_retrieve_memories_tool,
     run_retrieve_context_tool,
     run_search_text_tool,
     run_write_file_tool,
@@ -90,6 +91,28 @@ class AgentToolsTests(unittest.TestCase):
             output = run_retrieve_context_tool(workspace, "billing")
 
         self.assertEqual(output, "No relevant repository context was retrieved.")
+
+    def test_retrieve_memories_tool_returns_matching_memory(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            workspace = Path(temp_dir)
+            from forge_agent.long_term_memory import add_memory
+
+            add_memory(workspace, "Use pip instead of uv.", kind="preference")
+
+            output = run_retrieve_memories_tool(workspace, "pip install")
+
+        self.assertIn("Use pip instead of uv.", output)
+
+    def test_retrieve_memories_tool_handles_no_matches(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            workspace = Path(temp_dir)
+            from forge_agent.long_term_memory import add_memory
+
+            add_memory(workspace, "Frontend uses React.")
+
+            output = run_retrieve_memories_tool(workspace, "database")
+
+        self.assertEqual(output, "No relevant memories found.")
 
 
 if __name__ == "__main__":

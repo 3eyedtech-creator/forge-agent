@@ -1,4 +1,5 @@
 import json
+import re
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -62,5 +63,25 @@ def clear_memories(workspace_root: Path) -> None:
         memory_path.unlink()
 
 
+def retrieve_memories(workspace_root: Path, query: str, max_items: int = 5) -> list[Memory]:
+    query_terms = tokenize(query)
+    if not query_terms:
+        return []
+
+    scored_memories = []
+    for memory in list_memories(workspace_root):
+        searchable_text = f"{memory.scope} {memory.kind} {memory.text}".lower()
+        score = sum(searchable_text.count(term) for term in query_terms)
+        if score > 0:
+            scored_memories.append((score, memory))
+
+    scored_memories.sort(key=lambda item: (-item[0], item[1].created_at))
+    return [memory for _, memory in scored_memories[:max_items]]
+
+
 def get_memory_path(workspace_root: Path) -> Path:
     return workspace_root.resolve() / ".forge-agent" / "memory.jsonl"
+
+
+def tokenize(text: str) -> list[str]:
+    return [token.lower() for token in re.findall(r"[a-zA-Z0-9_]+", text) if len(token) > 1]
