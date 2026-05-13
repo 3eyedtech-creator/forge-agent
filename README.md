@@ -43,6 +43,7 @@ forge
 Type `exit` or `quit` to stop the chat loop.
 
 The agent writes a local JSONL event log to `.forge-agent/events.jsonl`.
+The current chat session is saved to `.forge-agent/sessions/current.json`.
 
 ## Slash Commands
 

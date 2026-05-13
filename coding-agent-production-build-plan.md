@@ -1422,6 +1422,13 @@ Budget policies:
 - Persists session state to disk.
 - Restores session after CLI restart.
 
+**Initial Slice:**
+
+- Add JSON-backed short-term session memory under `.forge-agent/sessions/current.json`.
+- Store session ID, workspace root, timestamps, and chat messages.
+- Support load/create, save, append message, and clear messages.
+- Later slices will add inspected files, tool outputs, plans, edits, and observation summaries.
+
 ---
 
 ### CA-101: Implement Long-Term Memory Store

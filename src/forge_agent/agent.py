@@ -18,6 +18,7 @@ from forge_agent.agent_tools import build_tools
 from forge_agent.event_log import create_event, write_event
 from forge_agent.human_review import ask_for_tool_decisions, has_rejection
 from forge_agent.model_router import ModelSelection, route_model
+from forge_agent.session_memory import append_message, clear_messages, load_or_create_session, save_session
 from forge_agent.slash_commands import SlashCommandState, handle_slash_command
 
 
@@ -87,7 +88,8 @@ def main() -> None:
     write_event(session_event)
 
     tools = build_tools(workspace_root)
-    messages = []
+    session = load_or_create_session(workspace_root)
+    messages = session.messages
 
     console.print(
         Panel.fit(
@@ -121,7 +123,8 @@ def main() -> None:
             console.print(Panel(slash_result.output, title="Command", border_style="blue"))
 
             if slash_result.should_clear_messages:
-                messages.clear()
+                clear_messages(session)
+                save_session(session)
 
             if slash_result.should_exit:
                 break
@@ -129,7 +132,8 @@ def main() -> None:
             continue
 
         write_event(create_event("user_message", {"content": query}))
-        messages.append({"role": "user", "content": query})
+        append_message(session, "user", query)
+        save_session(session)
         selection = route_model(query, config.fast_model, config.reasoning_model)
         console.print(
             f"[dim]Using {selection.task_complexity} route: {selection.model} ({selection.reason})[/dim]"
@@ -175,7 +179,8 @@ def main() -> None:
             answer = get_last_message_text(result)
 
         write_event(create_event("assistant_message", {"content": answer}))
-        messages.append({"role": "assistant", "content": answer})
+        append_message(session, "assistant", answer)
+        save_session(session)
         console.print(Panel(answer, title="Agent", border_style="green"))
 
 

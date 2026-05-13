@@ -1,5 +1,6 @@
 .env
 .forge-agent/events.jsonl
+.forge-agent/sessions/
 __pycache__/
 *.py[cod]
 .venv/
