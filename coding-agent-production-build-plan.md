@@ -1363,7 +1363,9 @@ Budget policies:
 - Captures stdout, stderr, and exit code.
 - Enforces a timeout.
 - Blocks policy-denied commands and requires approval for risky commands.
-- Later slices will add duration tracking, output trimming, and CLI approval integration for agent-triggered commands.
+- Expose terminal execution as a LangChain tool.
+- Safe commands are allowed by policy directly, destructive commands are blocked, and risky commands require approval.
+- Later slices will add duration tracking, output trimming, scoped approvals, and finer-grained command classification.
 
 ---
 

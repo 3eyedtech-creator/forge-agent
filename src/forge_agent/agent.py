@@ -95,7 +95,7 @@ def main() -> None:
     )
     write_event(session_event)
 
-    tools = build_tools(workspace_root)
+    tools = build_tools(workspace_root, console=console)
     session = load_or_create_session(workspace_root)
     messages = session.messages
 

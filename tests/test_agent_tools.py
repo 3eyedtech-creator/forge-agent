@@ -9,6 +9,7 @@ from forge_agent.agent_tools import (
     run_read_file_tool,
     run_retrieve_memories_tool,
     run_retrieve_context_tool,
+    run_terminal_command_tool,
     run_search_text_tool,
     run_write_file_tool,
 )
@@ -113,6 +114,23 @@ class AgentToolsTests(unittest.TestCase):
             output = run_retrieve_memories_tool(workspace, "database")
 
         self.assertEqual(output, "No relevant memories found.")
+
+    def test_terminal_command_tool_runs_safe_command(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            workspace = Path(temp_dir)
+
+            output = run_terminal_command_tool(workspace, "git status")
+
+        self.assertIn("Exit code:", output)
+        self.assertIn("not a git repository", output.lower())
+
+    def test_terminal_command_tool_blocks_destructive_command(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            workspace = Path(temp_dir)
+
+            output = run_terminal_command_tool(workspace, "git reset --hard")
+
+        self.assertIn("blocked", output.lower())
 
 
 if __name__ == "__main__":

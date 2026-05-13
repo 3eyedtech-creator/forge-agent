@@ -7,7 +7,9 @@ from forge_agent.file_write_tool import create_file, edit_file, write_file
 from forge_agent.index_builder import build_index
 from forge_agent.index_store import IndexStore
 from forge_agent.long_term_memory import retrieve_memories
+from forge_agent.policy_engine import ApprovalResponse, PolicyDecision, decide_shell_command
 from forge_agent.retrieval_engine import retrieve_context
+from forge_agent.shell_command_tool import ShellCommandError, run_shell_command
 from forge_agent.text_search_tool import search_text
 
 
@@ -61,6 +63,25 @@ def run_retrieve_memories_tool(workspace_root: Path, query: str) -> str:
     )
 
 
+def run_terminal_command_tool(
+    workspace_root: Path,
+    command: str,
+    approval: ApprovalResponse | None = None,
+) -> str:
+    try:
+        result = run_shell_command(workspace_root, command, approval=approval)
+    except ShellCommandError as error:
+        return f"Command blocked: {error}"
+
+    output_parts = [f"Command: {result.command}", f"Exit code: {result.exit_code}"]
+    if result.stdout:
+        output_parts.append(f"STDOUT:\n{result.stdout.strip()}")
+    if result.stderr:
+        output_parts.append(f"STDERR:\n{result.stderr.strip()}")
+
+    return "\n".join(output_parts)
+
+
 def run_create_file_tool(workspace_root: Path, path: str, content: str) -> str:
     result = create_file(workspace_root, path, content)
     return f"{result.message.removesuffix('.')}: {result.path}"
@@ -76,7 +97,7 @@ def run_edit_file_tool(workspace_root: Path, path: str, old_text: str, new_text:
     return f"{result.message.removesuffix('.')}: {result.path}"
 
 
-def build_tools(workspace_root: Path) -> list:
+def build_tools(workspace_root: Path, console=None) -> list:
     from langchain.tools import tool
 
     @tool
@@ -105,6 +126,21 @@ def build_tools(workspace_root: Path) -> list:
         return run_retrieve_memories_tool(workspace_root, query)
 
     @tool
+    def run_terminal_command(command: str) -> str:
+        """Run a terminal command in the workspace. Safe read-only commands run directly; risky commands require approval."""
+        decision = decide_shell_command(command)
+
+        if decision == PolicyDecision.REQUIRE_APPROVAL:
+            if console is None:
+                return "Command requires approval, but no approval prompt is available."
+            from forge_agent.approval_prompt import ask_for_approval
+
+            approval = ask_for_approval(command, "Command is not classified as safe read-only.", console)
+            return run_terminal_command_tool(workspace_root, command, approval=approval)
+
+        return run_terminal_command_tool(workspace_root, command)
+
+    @tool
     def create_workspace_file(path: str, content: str) -> str:
         """Create a new UTF-8 text file in the current workspace."""
         return run_create_file_tool(workspace_root, path, content)
@@ -125,6 +161,7 @@ def build_tools(workspace_root: Path) -> list:
         search_workspace_text,
         retrieve_workspace_context,
         retrieve_workspace_memories,
+        run_terminal_command,
         create_workspace_file,
         write_workspace_file,
         edit_workspace_file,
