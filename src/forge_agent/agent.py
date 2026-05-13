@@ -20,6 +20,7 @@ from forge_agent.human_review import ask_for_tool_decisions, has_rejection
 from forge_agent.model_router import ModelSelection, route_model
 from forge_agent.session_memory import append_message, clear_messages, load_or_create_session, save_session
 from forge_agent.slash_commands import SlashCommandState, handle_slash_command
+from forge_agent.task_planner import create_task_plan, format_task_plan
 
 
 console = Console()
@@ -139,6 +140,13 @@ def main() -> None:
         console.print(
             f"[dim]Using {selection.task_complexity} route: {selection.model} ({selection.reason})[/dim]"
         )
+
+        if selection.should_plan:
+            plan = create_task_plan(query)
+            formatted_plan = format_task_plan(plan)
+            console.print(Panel(formatted_plan, title="Plan", border_style="magenta"))
+            append_message(session, "system", formatted_plan)
+            save_session(session)
 
         llm = ChatOpenAI(model=selection.model)
         agent = create_agent(

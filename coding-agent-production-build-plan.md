@@ -1251,6 +1251,14 @@ Budget policies:
 - Plans are included in context.
 - User can request plan-only mode before implementation.
 
+**Initial Slice:**
+
+- Add deterministic task plan creation for complex tasks.
+- Plans include a goal and ordered pending steps.
+- Print the plan before complex model calls.
+- Persist the formatted plan in short-term session memory.
+- Later slices will store structured plan state and update step statuses as work executes.
+
 ---
 
 ### CA-073: Implement Clarification Handling
