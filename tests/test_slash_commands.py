@@ -91,6 +91,31 @@ class SlashCommandsTests(unittest.TestCase):
         self.assertIn("user: hello", result.output)
         self.assertIn("assistant: hi", result.output)
 
+    def test_plan_show_command_displays_active_plan(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            state = SlashCommandState(
+                workspace_root=Path(temp_dir),
+                model="gpt-test",
+                message_count=0,
+                active_plan={
+                    "goal": "fix login",
+                    "steps": [{"description": "Inspect files", "status": "pending"}],
+                },
+            )
+
+            result = handle_slash_command("/plan show", state)
+
+        self.assertIn("Plan: fix login", result.output)
+        self.assertIn("Inspect files", result.output)
+
+    def test_plan_clear_command_requests_plan_clear(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            state = SlashCommandState(workspace_root=Path(temp_dir), model="gpt-test", message_count=0)
+
+            result = handle_slash_command("/plan clear", state)
+
+        self.assertTrue(result.should_clear_plan)
+
     def test_exit_command_requests_exit(self) -> None:
         with TemporaryDirectory() as temp_dir:
             state = SlashCommandState(workspace_root=Path(temp_dir), model="gpt-test", message_count=0)

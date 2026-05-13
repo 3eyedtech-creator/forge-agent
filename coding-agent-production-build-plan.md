@@ -1256,7 +1256,8 @@ Budget policies:
 - Add deterministic task plan creation for complex tasks.
 - Plans include a goal and ordered pending steps.
 - Print the plan before complex model calls.
-- Persist the formatted plan in short-term session memory.
+- Persist the formatted plan and structured active plan in short-term session memory.
+- Add `/plan show` and `/plan clear` slash commands.
 - Later slices will store structured plan state and update step statuses as work executes.
 
 ---

@@ -13,6 +13,7 @@ class SlashCommandState:
     model: str
     message_count: int
     messages: list[dict[str, str]] | None = None
+    active_plan: dict | None = None
 
 
 @dataclass
@@ -20,6 +21,7 @@ class SlashCommandResult:
     output: str
     should_exit: bool = False
     should_clear_messages: bool = False
+    should_clear_plan: bool = False
 
 
 HELP_TEXT = """Available commands:
@@ -33,6 +35,8 @@ HELP_TEXT = """Available commands:
 /session show        Show current short-term session messages
 /session path        Show current session file path
 /session clear       Clear current session messages
+/plan show           Show the active task plan
+/plan clear          Clear the active task plan
 /clear                Clear chat memory
 /exit                 Exit the agent
 """
@@ -104,6 +108,17 @@ def handle_slash_command(command: str, state: SlashCommandState) -> SlashCommand
 
     if command == "/session path":
         return SlashCommandResult(output=str(get_session_path(state.workspace_root)))
+
+    if command == "/plan show":
+        if not state.active_plan:
+            return SlashCommandResult(output="No active plan.")
+        lines = [f"Plan: {state.active_plan['goal']}"]
+        for index, step in enumerate(state.active_plan["steps"], start=1):
+            lines.append(f"{index}. [{step['status']}] {step['description']}")
+        return SlashCommandResult(output="\n".join(lines))
+
+    if command == "/plan clear":
+        return SlashCommandResult(output="Plan cleared.", should_clear_plan=True)
 
     if command in {"/clear", "/session clear"}:
         return SlashCommandResult(output="Chat memory cleared.", should_clear_messages=True)

@@ -4,6 +4,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
+from forge_agent.task_planner import TaskPlan
+
 
 @dataclass
 class SessionState:
@@ -12,6 +14,7 @@ class SessionState:
     created_at: str
     updated_at: str
     messages: list[dict[str, str]]
+    active_plan: dict | None = None
 
 
 def load_or_create_session(workspace_root: Path) -> SessionState:
@@ -44,6 +47,20 @@ def append_message(session: SessionState, role: str, content: str) -> None:
 
 def clear_messages(session: SessionState) -> None:
     session.messages.clear()
+
+
+def set_plan(session: SessionState, plan: TaskPlan) -> None:
+    session.active_plan = {
+        "goal": plan.goal,
+        "steps": [
+            {"description": step.description, "status": step.status}
+            for step in plan.steps
+        ],
+    }
+
+
+def clear_plan(session: SessionState) -> None:
+    session.active_plan = None
 
 
 def get_session_path(workspace_root: Path) -> Path:

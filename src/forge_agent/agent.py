@@ -18,7 +18,14 @@ from forge_agent.agent_tools import build_tools
 from forge_agent.event_log import create_event, write_event
 from forge_agent.human_review import ask_for_tool_decisions, has_rejection
 from forge_agent.model_router import ModelSelection, route_model
-from forge_agent.session_memory import append_message, clear_messages, load_or_create_session, save_session
+from forge_agent.session_memory import (
+    append_message,
+    clear_messages,
+    clear_plan,
+    load_or_create_session,
+    save_session,
+    set_plan,
+)
 from forge_agent.slash_commands import SlashCommandState, handle_slash_command
 from forge_agent.task_planner import create_task_plan, format_task_plan
 
@@ -120,12 +127,17 @@ def main() -> None:
                     model=f"{config.fast_model} / {config.reasoning_model}",
                     message_count=len(messages),
                     messages=messages,
+                    active_plan=session.active_plan,
                 ),
             )
             console.print(Panel(slash_result.output, title="Command", border_style="blue"))
 
             if slash_result.should_clear_messages:
                 clear_messages(session)
+                save_session(session)
+
+            if slash_result.should_clear_plan:
+                clear_plan(session)
                 save_session(session)
 
             if slash_result.should_exit:
@@ -145,6 +157,7 @@ def main() -> None:
             plan = create_task_plan(query)
             formatted_plan = format_task_plan(plan)
             console.print(Panel(formatted_plan, title="Plan", border_style="magenta"))
+            set_plan(session, plan)
             append_message(session, "system", formatted_plan)
             save_session(session)
 

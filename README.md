@@ -60,6 +60,8 @@ Slash commands are handled locally and are not sent to the model:
 /session show
 /session path
 /session clear
+/plan show
+/plan clear
 /clear
 /exit
 ```
