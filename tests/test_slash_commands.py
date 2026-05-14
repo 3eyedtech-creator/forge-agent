@@ -48,6 +48,23 @@ class SlashCommandsTests(unittest.TestCase):
         self.assertIn("Relevant repository context:", result.output)
         self.assertIn("auth.py", result.output)
 
+    def test_run_command_executes_safe_terminal_command(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            state = SlashCommandState(workspace_root=Path(temp_dir), model="gpt-test", message_count=0)
+
+            result = handle_slash_command("/run git status", state)
+
+        self.assertIn("Command: git status", result.output)
+        self.assertIn("Exit code:", result.output)
+
+    def test_run_command_requires_command_text(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            state = SlashCommandState(workspace_root=Path(temp_dir), model="gpt-test", message_count=0)
+
+            result = handle_slash_command("/run", state)
+
+        self.assertEqual(result.output, "Usage: /run <command>")
+
     def test_clear_command_requests_message_clear(self) -> None:
         with TemporaryDirectory() as temp_dir:
             state = SlashCommandState(workspace_root=Path(temp_dir), model="gpt-test", message_count=2)

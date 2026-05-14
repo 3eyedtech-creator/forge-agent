@@ -717,9 +717,10 @@ Budget policies:
 **Slash Command Slice:**
 
 - Add local slash commands handled before model calls.
-- Support `/help`, `/status`, `/index`, `/retrieve <query>`, `/clear`, and `/exit`.
+- Support `/help`, `/status`, `/index`, `/retrieve <query>`, `/run <command>`, `/clear`, and `/exit`.
 - `/index` rebuilds the workspace SQLite index.
 - `/retrieve` shows retrieval output directly for debugging and learning.
+- `/run` executes terminal commands through the same command policy used by the agent tool.
 
 ---
 

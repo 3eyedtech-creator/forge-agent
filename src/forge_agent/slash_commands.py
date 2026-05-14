@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 
-from forge_agent.agent_tools import run_retrieve_context_tool
+from forge_agent.agent_tools import run_retrieve_context_tool, run_terminal_command_tool
 from forge_agent.index_builder import build_index
 from forge_agent.long_term_memory import add_memory, clear_memories, list_memories
 from forge_agent.session_memory import get_session_path
@@ -29,6 +29,7 @@ HELP_TEXT = """Available commands:
 /status               Show workspace, model, and message count
 /index                Rebuild the workspace index
 /retrieve <query>     Show retrieved repository context for a query
+/run <command>        Run a terminal command through policy checks
 /memory add <text>    Save a workspace memory
 /memory list          List workspace memories
 /memory clear         Clear workspace memories
@@ -73,6 +74,15 @@ def handle_slash_command(command: str, state: SlashCommandState) -> SlashCommand
         if not query:
             return SlashCommandResult(output="Usage: /retrieve <query>")
         return SlashCommandResult(output=run_retrieve_context_tool(state.workspace_root, query))
+
+    if command == "/run":
+        return SlashCommandResult(output="Usage: /run <command>")
+
+    if command.startswith("/run "):
+        terminal_command = command.removeprefix("/run ").strip()
+        if not terminal_command:
+            return SlashCommandResult(output="Usage: /run <command>")
+        return SlashCommandResult(output=run_terminal_command_tool(state.workspace_root, terminal_command))
 
     if command.startswith("/memory add "):
         text = command.removeprefix("/memory add ").strip()

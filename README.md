@@ -54,6 +54,7 @@ Slash commands are handled locally and are not sent to the model:
 /status
 /index
 /retrieve <query>
+/run <command>
 /memory add <text>
 /memory list
 /memory clear
