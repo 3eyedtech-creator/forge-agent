@@ -6,6 +6,7 @@ from forge_agent.agent_tools import (
     run_retrieve_context_tool,
     run_terminal_command_tool,
 )
+from forge_agent.approval_mode import ApprovalMode, parse_approval_mode
 from forge_agent.index_builder import build_index
 from forge_agent.long_term_memory import add_memory, clear_memories, list_memories
 from forge_agent.session_memory import get_session_path
@@ -18,6 +19,7 @@ class SlashCommandState:
     message_count: int
     messages: list[dict[str, str]] | None = None
     active_plan: dict | None = None
+    approval_mode: ApprovalMode = ApprovalMode.MANUAL
 
 
 @dataclass
@@ -26,6 +28,7 @@ class SlashCommandResult:
     should_exit: bool = False
     should_clear_messages: bool = False
     should_clear_plan: bool = False
+    next_approval_mode: ApprovalMode | None = None
 
 
 HELP_TEXT = """Available commands:
@@ -35,6 +38,7 @@ HELP_TEXT = """Available commands:
 /retrieve <query>     Show retrieved repository context for a query
 /run <command>        Run a terminal command through policy checks
 /python <code>        Run Python code in a temporary sandbox directory
+/mode [manual|auto]   Show or change approval mode
 /memory add <text>    Save a workspace memory
 /memory list          List workspace memories
 /memory clear         Clear workspace memories
@@ -59,8 +63,24 @@ def handle_slash_command(command: str, state: SlashCommandState) -> SlashCommand
             output=(
                 f"Workspace: {state.workspace_root}\n"
                 f"Model: {state.model}\n"
-                f"Messages: {state.message_count}"
+                f"Messages: {state.message_count}\n"
+                f"Approval mode: {state.approval_mode.value}"
             )
+        )
+
+    if command == "/mode":
+        return SlashCommandResult(output=f"Approval mode: {state.approval_mode.value}")
+
+    if command.startswith("/mode "):
+        mode_text = command.removeprefix("/mode ").strip()
+        try:
+            next_mode = parse_approval_mode(mode_text)
+        except ValueError:
+            return SlashCommandResult(output="Usage: /mode [manual|auto]")
+
+        return SlashCommandResult(
+            output=f"Approval mode set to {next_mode.value}.",
+            next_approval_mode=next_mode,
         )
 
     if command == "/index":

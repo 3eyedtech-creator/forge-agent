@@ -17,7 +17,8 @@ This project is intentionally built in small, understandable pieces. It is usefu
 - File create, write, and exact edit tools.
 - Policy-guarded terminal command execution.
 - Lightweight Python snippet sandbox with `/python`.
-- Rich terminal output.
+- Rich terminal output with status spinners while the agent is working.
+- Manual and auto approval modes.
 
 ## Requirements
 
@@ -137,6 +138,7 @@ Slash commands are handled locally and are not sent to the model.
 /retrieve <query>     Retrieve relevant repository context
 /run <command>        Run a terminal command through policy checks
 /python <code>        Run Python code in a temporary sandbox directory
+/mode [manual|auto]   Show or change approval mode
 /memory add <text>    Save a workspace memory
 /memory list          List workspace memories
 /memory clear         Clear workspace memories
@@ -159,9 +161,18 @@ Forge Agent is designed to be local-first and explicit about risky actions.
 - Safe read-only commands can run directly.
 - Risky commands require approval.
 - Destructive commands are blocked by default.
+- Manual mode asks before file create, write, and edit tools.
+- Auto mode allows ordinary file tools without repeated prompts, while terminal command policy still applies.
 - `/python <code>` runs in a temporary directory with a stripped environment.
 
 The current Python sandbox is lightweight. It is useful for quick calculations and small repro scripts, but it is not a container or virtual machine security boundary.
+
+Switch approval mode during a session:
+
+```text
+/mode auto
+/mode manual
+```
 
 ## Local Development
 

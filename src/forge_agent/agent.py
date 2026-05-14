@@ -16,6 +16,7 @@ from rich.panel import Panel
 from rich.prompt import Prompt
 
 from forge_agent.agent_tools import build_tools
+from forge_agent.approval_mode import ApprovalMode, build_interrupt_policy
 from forge_agent.cli_args import get_version_text, resolve_startup_command
 from forge_agent.event_log import create_event, write_event
 from forge_agent.human_review import ask_for_tool_decisions, has_rejection
@@ -30,6 +31,7 @@ from forge_agent.session_memory import (
 )
 from forge_agent.slash_commands import SlashCommandState, handle_slash_command
 from forge_agent.task_planner import create_task_plan, format_task_plan
+from forge_agent.terminal_ui import build_ready_text
 
 
 console = Console()
@@ -106,13 +108,13 @@ def main(argv: list[str] | None = None) -> None:
     tools = build_tools(workspace_root, console=console)
     session = load_or_create_session(workspace_root)
     messages = session.messages
+    approval_mode = ApprovalMode.MANUAL
 
     console.print(
         Panel.fit(
-            f"Forge Agent\nWorkspace: {workspace_root}\n"
-            f"Fast model: {config.fast_model}\nReasoning model: {config.reasoning_model}\n"
-            "Type 'exit' or 'quit' to stop.",
-            title="Ready",
+            build_ready_text(workspace_root, config.fast_model, config.reasoning_model, approval_mode),
+            title="Forge",
+            border_style="cyan",
         )
     )
 
@@ -136,9 +138,13 @@ def main(argv: list[str] | None = None) -> None:
                     message_count=len(messages),
                     messages=messages,
                     active_plan=session.active_plan,
+                    approval_mode=approval_mode,
                 ),
             )
             console.print(Panel(slash_result.output, title="Command", border_style="blue"))
+
+            if slash_result.next_approval_mode is not None:
+                approval_mode = slash_result.next_approval_mode
 
             if slash_result.should_clear_messages:
                 clear_messages(session)
@@ -175,16 +181,7 @@ def main(argv: list[str] | None = None) -> None:
             tools=tools,
             middleware=[
                 HumanInTheLoopMiddleware(
-                    interrupt_on={
-                        "list_workspace_files": False,
-                        "read_workspace_file": False,
-                        "search_workspace_text": False,
-                        "retrieve_workspace_context": False,
-                        "retrieve_workspace_memories": False,
-                        "create_workspace_file": {"allowed_decisions": ["approve", "reject"]},
-                        "write_workspace_file": {"allowed_decisions": ["approve", "reject"]},
-                        "edit_workspace_file": {"allowed_decisions": ["approve", "reject"]},
-                    },
+                    interrupt_on=build_interrupt_policy(approval_mode),
                     description_prefix="Tool execution pending approval",
                 )
             ],
@@ -193,7 +190,8 @@ def main(argv: list[str] | None = None) -> None:
         )
 
         agent_config = {"configurable": {"thread_id": f"forge-agent-local-{uuid4().hex}"}}
-        result = agent.invoke({"messages": messages}, config=agent_config, version="v2")
+        with console.status("[bold cyan]Thinking...[/bold cyan]", spinner="dots"):
+            result = agent.invoke({"messages": messages}, config=agent_config, version="v2")
 
         while getattr(result, "interrupts", None):
             decisions = ask_for_tool_decisions(result.interrupts, console)
@@ -201,11 +199,12 @@ def main(argv: list[str] | None = None) -> None:
                 answer = "Tool call rejected. I did not run the requested action."
                 break
 
-            result = agent.invoke(
-                Command(resume={"decisions": decisions}),
-                config=agent_config,
-                version="v2",
-            )
+            with console.status("[bold cyan]Continuing...[/bold cyan]", spinner="dots"):
+                result = agent.invoke(
+                    Command(resume={"decisions": decisions}),
+                    config=agent_config,
+                    version="v2",
+                )
         else:
             answer = get_last_message_text(result)
 

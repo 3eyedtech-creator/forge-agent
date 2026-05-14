@@ -755,6 +755,17 @@ Budget policies:
 - Denied actions are recorded as observations.
 - Agent can continue after denied actions when possible.
 
+**Initial UX Slice:**
+
+- Add manual and auto approval modes.
+- Default to manual mode.
+- Add `/mode`, `/mode auto`, and `/mode manual` slash commands.
+- In auto mode, allow ordinary file create/write/edit tools without repeated prompts.
+- Keep terminal command policy active in auto mode so risky commands still require approval and destructive commands stay blocked.
+- Summarize file tool arguments in approval prompts instead of printing full file contents.
+- Show Rich status spinners while waiting for model/tool cycles.
+- Improve the startup panel with workspace, model, approval mode, and command hints.
+
 ---
 
 ## Epic C: File and Search Tools

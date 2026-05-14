@@ -2,6 +2,7 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from forge_agent.approval_mode import ApprovalMode
 from forge_agent.slash_commands import SlashCommandState, handle_slash_command
 
 
@@ -24,6 +25,45 @@ class SlashCommandsTests(unittest.TestCase):
 
         self.assertIn("gpt-test", result.output)
         self.assertIn("Messages: 2", result.output)
+
+    def test_mode_command_shows_current_approval_mode(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            state = SlashCommandState(
+                workspace_root=Path(temp_dir),
+                model="gpt-test",
+                message_count=0,
+                approval_mode=ApprovalMode.AUTO,
+            )
+
+            result = handle_slash_command("/mode", state)
+
+        self.assertIn("Approval mode: auto", result.output)
+
+    def test_mode_auto_command_requests_auto_mode(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            state = SlashCommandState(workspace_root=Path(temp_dir), model="gpt-test", message_count=0)
+
+            result = handle_slash_command("/mode auto", state)
+
+        self.assertEqual(result.next_approval_mode, ApprovalMode.AUTO)
+        self.assertIn("Approval mode set to auto", result.output)
+
+    def test_mode_manual_command_requests_manual_mode(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            state = SlashCommandState(workspace_root=Path(temp_dir), model="gpt-test", message_count=0)
+
+            result = handle_slash_command("/mode manual", state)
+
+        self.assertEqual(result.next_approval_mode, ApprovalMode.MANUAL)
+        self.assertIn("Approval mode set to manual", result.output)
+
+    def test_mode_command_rejects_unknown_mode(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            state = SlashCommandState(workspace_root=Path(temp_dir), model="gpt-test", message_count=0)
+
+            result = handle_slash_command("/mode dangerous", state)
+
+        self.assertEqual(result.output, "Usage: /mode [manual|auto]")
 
     def test_index_command_builds_index(self) -> None:
         with TemporaryDirectory() as temp_dir:
