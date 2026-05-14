@@ -1,4 +1,5 @@
 import os
+import sys
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
@@ -15,6 +16,7 @@ from rich.panel import Panel
 from rich.prompt import Prompt
 
 from forge_agent.agent_tools import build_tools
+from forge_agent.cli_args import get_version_text, resolve_startup_command
 from forge_agent.event_log import create_event, write_event
 from forge_agent.human_review import ask_for_tool_decisions, has_rejection
 from forge_agent.model_router import ModelSelection, route_model
@@ -80,7 +82,13 @@ def build_system_prompt(selection: ModelSelection) -> str:
     return prompt
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
+    args = sys.argv[1:] if argv is None else argv
+    startup_command = resolve_startup_command(args)
+    if startup_command == "version":
+        console.print(get_version_text())
+        return
+
     workspace_root = Path.cwd().resolve()
     load_dotenv(dotenv_path=workspace_root / ".env", override=True)
 

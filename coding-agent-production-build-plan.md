@@ -1668,6 +1668,8 @@ Budget policies:
 - Bootstrap `pipx` with the active Python installation when it is missing.
 - Keep the GitHub repository URL in a single editable variable until the real remote is configured.
 - Document both installer commands and direct `pipx install git+https://github.com/...` installation.
+- Add `forge --version`/`forge version` so users can check their installed version.
+- Document update and uninstall commands for `pipx` installations.
 
 ---
 

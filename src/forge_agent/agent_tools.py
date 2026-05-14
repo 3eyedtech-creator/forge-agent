@@ -3,7 +3,7 @@ from pathlib import Path
 from forge_agent.context_builder import build_context_section
 from forge_agent.file_list_tool import list_files
 from forge_agent.file_read_tool import read_text_file
-from forge_agent.file_write_tool import create_file, edit_file, write_file
+from forge_agent.file_write_tool import FileWriteError, create_file, edit_file, write_file
 from forge_agent.index_builder import build_index
 from forge_agent.index_store import IndexStore
 from forge_agent.long_term_memory import retrieve_memories
@@ -99,17 +99,29 @@ def run_python_sandbox_tool(workspace_root: Path, code: str) -> str:
 
 
 def run_create_file_tool(workspace_root: Path, path: str, content: str) -> str:
-    result = create_file(workspace_root, path, content)
+    try:
+        result = create_file(workspace_root, path, content)
+    except FileWriteError as error:
+        return f"File write failed: {error}"
+
     return f"{result.message.removesuffix('.')}: {result.path}"
 
 
 def run_write_file_tool(workspace_root: Path, path: str, content: str) -> str:
-    result = write_file(workspace_root, path, content)
+    try:
+        result = write_file(workspace_root, path, content)
+    except FileWriteError as error:
+        return f"File write failed: {error}"
+
     return f"{result.message.removesuffix('.')}: {result.path}"
 
 
 def run_edit_file_tool(workspace_root: Path, path: str, old_text: str, new_text: str) -> str:
-    result = edit_file(workspace_root, path, old_text, new_text)
+    try:
+        result = edit_file(workspace_root, path, old_text, new_text)
+    except FileWriteError as error:
+        return f"File write failed: {error}"
+
     return f"{result.message.removesuffix('.')}: {result.path}"
 
 

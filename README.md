@@ -86,6 +86,46 @@ Search for TODO comments.
 
 Forge Agent treats the current terminal directory as the active workspace.
 
+Check the installed version:
+
+```bash
+forge --version
+```
+
+## Update
+
+Forge Agent does not update automatically when new code is pushed to GitHub. To update an existing `pipx` installation:
+
+```bash
+pipx upgrade forge-agent
+```
+
+If the GitHub install needs to be refreshed forcefully:
+
+```bash
+pipx install --force git+https://github.com/3eyedtech-creator/forge-agent.git
+```
+
+You can also rerun the installer script. The installers use `--force`, so they replace the existing install with the latest code from GitHub.
+
+macOS/Linux:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/3eyedtech-creator/forge-agent/main/install.sh | bash
+```
+
+Windows PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/3eyedtech-creator/forge-agent/main/install.ps1 | iex
+```
+
+Uninstall:
+
+```bash
+pipx uninstall forge-agent
+```
+
 ## Slash Commands
 
 Slash commands are handled locally and are not sent to the model.

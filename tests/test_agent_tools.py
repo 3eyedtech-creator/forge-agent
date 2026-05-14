@@ -1,8 +1,10 @@
 import unittest
+import importlib.util
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from forge_agent.agent_tools import (
+    build_tools,
     run_create_file_tool,
     run_edit_file_tool,
     run_list_files_tool,
@@ -64,6 +66,27 @@ class AgentToolsTests(unittest.TestCase):
             self.assertEqual((workspace / "notes.txt").read_text(encoding="utf-8"), "new")
         self.assertEqual(output, "File written: notes.txt")
 
+    def test_write_file_tool_returns_error_message_for_missing_file(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            workspace = Path(temp_dir)
+
+            output = run_write_file_tool(workspace, "backend/requirements.txt", "fastapi")
+
+        self.assertEqual(output, "File write failed: File does not exist: backend/requirements.txt")
+
+    def test_langchain_write_file_tool_returns_error_message_for_missing_file(self) -> None:
+        if importlib.util.find_spec("langchain") is None:
+            self.skipTest("langchain is not installed in this test runtime")
+
+        with TemporaryDirectory() as temp_dir:
+            workspace = Path(temp_dir)
+            tools = build_tools(workspace)
+            write_tool = next(tool for tool in tools if tool.name == "write_workspace_file")
+
+            output = write_tool.invoke({"path": "backend/requirements.txt", "content": "fastapi"})
+
+        self.assertEqual(output, "File write failed: File does not exist: backend/requirements.txt")
+
     def test_edit_file_tool_returns_success_message(self) -> None:
         with TemporaryDirectory() as temp_dir:
             workspace = Path(temp_dir)
@@ -73,6 +96,24 @@ class AgentToolsTests(unittest.TestCase):
 
             self.assertEqual((workspace / "notes.txt").read_text(encoding="utf-8"), "new text")
         self.assertEqual(output, "File edited: notes.txt")
+
+    def test_create_file_tool_returns_error_message_for_existing_file(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            workspace = Path(temp_dir)
+            (workspace / "notes.txt").write_text("old", encoding="utf-8")
+
+            output = run_create_file_tool(workspace, "notes.txt", "new")
+
+        self.assertEqual(output, "File write failed: File already exists: notes.txt")
+
+    def test_edit_file_tool_returns_error_message_for_missing_text(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            workspace = Path(temp_dir)
+            (workspace / "notes.txt").write_text("old text", encoding="utf-8")
+
+            output = run_edit_file_tool(workspace, "notes.txt", "missing", "new")
+
+        self.assertEqual(output, "File write failed: Text to replace was not found in: notes.txt")
 
     def test_retrieve_context_tool_builds_index_and_returns_context(self) -> None:
         with TemporaryDirectory() as temp_dir:
