@@ -13,13 +13,31 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
-Install the CLI in editable mode:
+Install the CLI in editable mode for local development:
 
 ```powershell
 pip install -e .
 ```
 
 This makes the `forge` command available in the active Python environment.
+
+## Install From GitHub
+
+After this repository is pushed to GitHub, update `install.sh`, `install.ps1`, and the URLs below by replacing `YOUR_USERNAME` with the GitHub account or organization name.
+
+macOS/Linux:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/forge-agent/main/install.sh | bash
+```
+
+Windows PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/YOUR_USERNAME/forge-agent/main/install.ps1 | iex
+```
+
+Both installers use `pipx` so the `forge` command can be run from any repository.
 
 Create a `.env` file by copying `.env.example`, then add your real OpenAI API key:
 
@@ -55,6 +73,7 @@ Slash commands are handled locally and are not sent to the model:
 /index
 /retrieve <query>
 /run <command>
+/python <code>
 /memory add <text>
 /memory list
 /memory clear
@@ -66,6 +85,8 @@ Slash commands are handled locally and are not sent to the model:
 /clear
 /exit
 ```
+
+`/python <code>` runs a Python snippet in a temporary directory with a stripped environment. This is useful for quick calculations, parser experiments, and tiny repro scripts without writing files into the workspace. It is a lightweight sandbox, not a container or VM security boundary.
 
 To use the agent in another repository, open a terminal in that repository and run:
 
@@ -79,4 +100,10 @@ If you want `forge` available globally without activating this virtual environme
 
 ```powershell
 pipx install -e D:\coding_agent
+```
+
+For direct GitHub installation without the installer script:
+
+```powershell
+pipx install git+https://github.com/YOUR_USERNAME/forge-agent.git
 ```

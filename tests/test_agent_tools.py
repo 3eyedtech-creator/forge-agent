@@ -9,6 +9,7 @@ from forge_agent.agent_tools import (
     run_read_file_tool,
     run_retrieve_memories_tool,
     run_retrieve_context_tool,
+    run_python_sandbox_tool,
     run_terminal_command_tool,
     run_search_text_tool,
     run_write_file_tool,
@@ -131,6 +132,15 @@ class AgentToolsTests(unittest.TestCase):
             output = run_terminal_command_tool(workspace, "git reset --hard")
 
         self.assertIn("blocked", output.lower())
+
+    def test_python_sandbox_tool_returns_readable_output(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            workspace = Path(temp_dir)
+
+            output = run_python_sandbox_tool(workspace, "print('hello')")
+
+        self.assertIn("Exit code: 0", output)
+        self.assertIn("STDOUT:\nhello", output)
 
 
 if __name__ == "__main__":

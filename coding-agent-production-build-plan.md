@@ -975,7 +975,7 @@ Budget policies:
 
 **Goal:** Extract symbols from common languages.
 
-**Priority:** P1  
+**Priority:** P1
 **Dependencies:** CA-042
 
 **Acceptance Criteria:**
@@ -1402,6 +1402,31 @@ Budget policies:
 
 ---
 
+### CA-094: Implement Sandboxed Code Execution Tool
+
+**Goal:** Run small code snippets outside the workspace for safe experimentation.
+
+**Priority:** P1
+**Dependencies:** CA-090
+
+**Acceptance Criteria:**
+
+- Runs snippets in a temporary directory instead of the workspace.
+- Captures stdout, stderr, exit code, and timeout failures.
+- Strips sensitive environment variables before execution.
+- Exposes sandbox execution as a slash command and LangChain tool.
+- Clearly documents that the first implementation is a lightweight temp-directory sandbox, not a container or VM security boundary.
+
+**Initial Slice:**
+
+- Add Python snippet execution through `/python <code>`.
+- Add a `run_python_sandbox_code` LangChain tool.
+- Run snippets with the current Python interpreter in a temporary directory.
+- Use a minimal environment and a short timeout.
+- Later slices will add multi-line input ergonomics, configured language runtimes, resource limits, and stronger OS/container isolation.
+
+---
+
 ### CA-093: Implement Debugging Feedback Loop
 
 **Goal:** Use test failures to iteratively fix code.
@@ -1634,6 +1659,15 @@ Budget policies:
 - Version command works.
 - Release notes summarize features and limitations.
 - Smoke test passes on a sample repository.
+
+**Initial Slice:**
+
+- Add `install.sh` for macOS/Linux one-command installation through `curl ... | bash`.
+- Add `install.ps1` for Windows PowerShell one-command installation through `irm ... | iex`.
+- Use `pipx` to install the package from GitHub so `forge` is globally available.
+- Bootstrap `pipx` with the active Python installation when it is missing.
+- Keep the GitHub repository URL in a single editable variable until the real remote is configured.
+- Document both installer commands and direct `pipx install git+https://github.com/...` installation.
 
 ---
 

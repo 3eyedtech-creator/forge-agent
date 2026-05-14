@@ -65,6 +65,23 @@ class SlashCommandsTests(unittest.TestCase):
 
         self.assertEqual(result.output, "Usage: /run <command>")
 
+    def test_python_command_runs_code_in_sandbox(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            state = SlashCommandState(workspace_root=Path(temp_dir), model="gpt-test", message_count=0)
+
+            result = handle_slash_command("/python print('hello')", state)
+
+        self.assertIn("Exit code: 0", result.output)
+        self.assertIn("STDOUT:\nhello", result.output)
+
+    def test_python_command_requires_code(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            state = SlashCommandState(workspace_root=Path(temp_dir), model="gpt-test", message_count=0)
+
+            result = handle_slash_command("/python", state)
+
+        self.assertEqual(result.output, "Usage: /python <code>")
+
     def test_clear_command_requests_message_clear(self) -> None:
         with TemporaryDirectory() as temp_dir:
             state = SlashCommandState(workspace_root=Path(temp_dir), model="gpt-test", message_count=2)

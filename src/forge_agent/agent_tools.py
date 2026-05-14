@@ -9,6 +9,7 @@ from forge_agent.index_store import IndexStore
 from forge_agent.long_term_memory import retrieve_memories
 from forge_agent.policy_engine import ApprovalResponse, PolicyDecision, decide_shell_command
 from forge_agent.retrieval_engine import retrieve_context
+from forge_agent.sandbox_python_tool import run_python_sandbox
 from forge_agent.shell_command_tool import ShellCommandError, run_shell_command
 from forge_agent.text_search_tool import search_text
 
@@ -82,6 +83,21 @@ def run_terminal_command_tool(
     return "\n".join(output_parts)
 
 
+def run_python_sandbox_tool(workspace_root: Path, code: str) -> str:
+    result = run_python_sandbox(workspace_root, code)
+
+    output_parts = [
+        "Sandbox: Python temporary directory",
+        f"Exit code: {result.exit_code}",
+    ]
+    if result.stdout:
+        output_parts.append(f"STDOUT:\n{result.stdout.strip()}")
+    if result.stderr:
+        output_parts.append(f"STDERR:\n{result.stderr.strip()}")
+
+    return "\n".join(output_parts)
+
+
 def run_create_file_tool(workspace_root: Path, path: str, content: str) -> str:
     result = create_file(workspace_root, path, content)
     return f"{result.message.removesuffix('.')}: {result.path}"
@@ -141,6 +157,11 @@ def build_tools(workspace_root: Path, console=None) -> list:
         return run_terminal_command_tool(workspace_root, command)
 
     @tool
+    def run_python_sandbox_code(code: str) -> str:
+        """Run a Python code snippet in a temporary sandbox directory and return stdout, stderr, and exit code."""
+        return run_python_sandbox_tool(workspace_root, code)
+
+    @tool
     def create_workspace_file(path: str, content: str) -> str:
         """Create a new UTF-8 text file in the current workspace."""
         return run_create_file_tool(workspace_root, path, content)
@@ -162,6 +183,7 @@ def build_tools(workspace_root: Path, console=None) -> list:
         retrieve_workspace_context,
         retrieve_workspace_memories,
         run_terminal_command,
+        run_python_sandbox_code,
         create_workspace_file,
         write_workspace_file,
         edit_workspace_file,
