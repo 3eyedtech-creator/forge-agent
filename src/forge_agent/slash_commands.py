@@ -11,6 +11,7 @@ from forge_agent.index_builder import build_index
 from forge_agent.long_term_memory import add_memory, clear_memories, list_memories
 from forge_agent.session_memory import get_session_path
 from forge_agent.task_planner import format_task_plan_dict, update_task_plan
+from forge_agent.task_report import format_task_report
 
 
 @dataclass
@@ -21,6 +22,9 @@ class SlashCommandState:
     messages: list[dict[str, str]] | None = None
     active_plan: dict | None = None
     approval_mode: ApprovalMode = ApprovalMode.MANUAL
+    changed_files: list[dict] | None = None
+    commands_run: list[dict] | None = None
+    report_risks: list[str] | None = None
 
 
 @dataclass
@@ -31,6 +35,7 @@ class SlashCommandResult:
     should_clear_plan: bool = False
     next_approval_mode: ApprovalMode | None = None
     next_active_plan: dict | None = None
+    command_run: dict | None = None
 
 
 HELP_TEXT = """Available commands:
@@ -47,6 +52,7 @@ HELP_TEXT = """Available commands:
 /session show        Show current short-term session messages
 /session path        Show current session file path
 /session clear       Clear current session messages
+/report              Show current task report
 /plan show           Show the active task plan
 /plan update <id> <status> [notes]
 /plan clear          Clear the active task plan
@@ -110,7 +116,15 @@ def handle_slash_command(command: str, state: SlashCommandState) -> SlashCommand
         terminal_command = command.removeprefix("/run ").strip()
         if not terminal_command:
             return SlashCommandResult(output="Usage: /run <command>")
-        return SlashCommandResult(output=run_terminal_command_tool(state.workspace_root, terminal_command))
+        output = run_terminal_command_tool(state.workspace_root, terminal_command)
+        return SlashCommandResult(
+            output=output,
+            command_run={
+                "command": terminal_command,
+                "exit_code": parse_exit_code(output),
+                "kind": classify_command_kind(terminal_command),
+            },
+        )
 
     if command == "/python":
         return SlashCommandResult(output="Usage: /python <code>")
@@ -156,6 +170,15 @@ def handle_slash_command(command: str, state: SlashCommandState) -> SlashCommand
     if command == "/session path":
         return SlashCommandResult(output=str(get_session_path(state.workspace_root)))
 
+    if command == "/report":
+        return SlashCommandResult(
+            output=format_task_report(
+                changed_files=state.changed_files or [],
+                commands_run=state.commands_run or [],
+                risks=state.report_risks or [],
+            )
+        )
+
     if command == "/plan show":
         if not state.active_plan:
             return SlashCommandResult(output="No active plan.")
@@ -193,3 +216,24 @@ def handle_slash_command(command: str, state: SlashCommandState) -> SlashCommand
         return SlashCommandResult(output="Goodbye.", should_exit=True)
 
     return SlashCommandResult(output=f"Unknown slash command: {command}\nType /help to see available commands.")
+
+
+def parse_exit_code(output: str) -> int:
+    for line in output.splitlines():
+        if line.startswith("Exit code:"):
+            try:
+                return int(line.removeprefix("Exit code:").strip())
+            except ValueError:
+                return -1
+
+    return -1
+
+
+def classify_command_kind(command: str) -> str:
+    lowered = command.lower()
+    verification_terms = ("test", "pytest", "unittest", "ruff", "mypy", "lint", "typecheck")
+
+    if any(term in lowered for term in verification_terms):
+        return "verification"
+
+    return "command"

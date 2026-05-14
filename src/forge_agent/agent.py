@@ -22,6 +22,7 @@ from forge_agent.event_log import create_event, write_event
 from forge_agent.human_review import ask_for_tool_decisions, has_rejection
 from forge_agent.model_router import ModelSelection, route_model
 from forge_agent.session_memory import (
+    add_command_run,
     append_message,
     clear_messages,
     clear_plan,
@@ -140,6 +141,9 @@ def main(argv: list[str] | None = None) -> None:
                     messages=messages,
                     active_plan=session.active_plan,
                     approval_mode=approval_mode,
+                    changed_files=session.changed_files,
+                    commands_run=session.commands_run,
+                    report_risks=session.report_risks,
                 ),
             )
             console.print(Panel(slash_result.output, title="Command", border_style="blue"))
@@ -149,6 +153,15 @@ def main(argv: list[str] | None = None) -> None:
 
             if slash_result.next_active_plan is not None:
                 session.active_plan = slash_result.next_active_plan
+                save_session(session)
+
+            if slash_result.command_run is not None:
+                add_command_run(
+                    session,
+                    slash_result.command_run["command"],
+                    slash_result.command_run["exit_code"],
+                    kind=slash_result.command_run["kind"],
+                )
                 save_session(session)
 
             if slash_result.should_clear_messages:

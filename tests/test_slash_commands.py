@@ -96,6 +96,8 @@ class SlashCommandsTests(unittest.TestCase):
 
         self.assertIn("Command: git status", result.output)
         self.assertIn("Exit code:", result.output)
+        self.assertIsNotNone(result.command_run)
+        self.assertEqual(result.command_run["command"], "git status")
 
     def test_run_command_requires_command_text(self) -> None:
         with TemporaryDirectory() as temp_dir:
@@ -164,6 +166,24 @@ class SlashCommandsTests(unittest.TestCase):
 
         self.assertIn("user: hello", result.output)
         self.assertIn("assistant: hi", result.output)
+
+    def test_report_command_displays_session_report(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            state = SlashCommandState(
+                workspace_root=Path(temp_dir),
+                model="gpt-test",
+                message_count=0,
+                changed_files=[{"path": "app.py", "action": "edited"}],
+                commands_run=[{"command": "python -m unittest", "exit_code": 0, "kind": "verification"}],
+                report_risks=["No integration test yet."],
+            )
+
+            result = handle_slash_command("/report", state)
+
+        self.assertIn("Files Changed", result.output)
+        self.assertIn("edited: app.py", result.output)
+        self.assertIn("python -m unittest (exit 0)", result.output)
+        self.assertIn("No integration test yet.", result.output)
 
     def test_plan_show_command_displays_active_plan(self) -> None:
         with TemporaryDirectory() as temp_dir:

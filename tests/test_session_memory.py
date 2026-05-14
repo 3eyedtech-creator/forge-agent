@@ -4,6 +4,9 @@ from tempfile import TemporaryDirectory
 
 from forge_agent.session_memory import (
     append_message,
+    add_changed_file,
+    add_command_run,
+    add_report_risk,
     clear_messages,
     clear_plan,
     load_or_create_session,
@@ -24,6 +27,9 @@ class SessionMemoryTests(unittest.TestCase):
         self.assertTrue(session.session_id.startswith("ses_"))
         self.assertEqual(session.workspace_root, str(workspace.resolve()))
         self.assertEqual(session.messages, [])
+        self.assertEqual(session.changed_files, [])
+        self.assertEqual(session.commands_run, [])
+        self.assertEqual(session.report_risks, [])
 
     def test_appends_and_persists_messages(self) -> None:
         with TemporaryDirectory() as temp_dir:
@@ -80,6 +86,34 @@ class SessionMemoryTests(unittest.TestCase):
 
         self.assertEqual(loaded.active_plan["steps"][0]["status"], "completed")
         self.assertEqual(loaded.active_plan["steps"][0]["notes"], "Found auth flow")
+
+    def test_tracks_changed_files_commands_and_report_risks(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            workspace = Path(temp_dir)
+            session = load_or_create_session(workspace)
+
+            add_changed_file(session, "app.py", "edited")
+            add_command_run(session, "python -m unittest", 0, kind="verification")
+            add_report_risk(session, "Coverage is still thin.")
+            save_session(session)
+            loaded = load_or_create_session(workspace)
+
+        self.assertEqual(loaded.changed_files, [{"path": "app.py", "action": "edited"}])
+        self.assertEqual(
+            loaded.commands_run,
+            [{"command": "python -m unittest", "exit_code": 0, "kind": "verification"}],
+        )
+        self.assertEqual(loaded.report_risks, ["Coverage is still thin."])
+
+    def test_changed_files_are_deduplicated_by_path_and_action(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            workspace = Path(temp_dir)
+            session = load_or_create_session(workspace)
+
+            add_changed_file(session, "app.py", "edited")
+            add_changed_file(session, "app.py", "edited")
+
+        self.assertEqual(session.changed_files, [{"path": "app.py", "action": "edited"}])
 
 
 if __name__ == "__main__":

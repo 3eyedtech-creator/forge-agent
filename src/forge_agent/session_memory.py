@@ -15,6 +15,17 @@ class SessionState:
     updated_at: str
     messages: list[dict[str, str]]
     active_plan: dict | None = None
+    changed_files: list[dict] | None = None
+    commands_run: list[dict] | None = None
+    report_risks: list[str] | None = None
+
+    def __post_init__(self) -> None:
+        if self.changed_files is None:
+            self.changed_files = []
+        if self.commands_run is None:
+            self.commands_run = []
+        if self.report_risks is None:
+            self.report_risks = []
 
 
 def load_or_create_session(workspace_root: Path) -> SessionState:
@@ -62,6 +73,21 @@ def update_active_plan(session: SessionState, step_id: str, status: str, notes: 
 
 def clear_plan(session: SessionState) -> None:
     session.active_plan = None
+
+
+def add_changed_file(session: SessionState, path: str, action: str) -> None:
+    item = {"path": path, "action": action}
+    if item not in session.changed_files:
+        session.changed_files.append(item)
+
+
+def add_command_run(session: SessionState, command: str, exit_code: int, kind: str = "command") -> None:
+    session.commands_run.append({"command": command, "exit_code": exit_code, "kind": kind})
+
+
+def add_report_risk(session: SessionState, risk: str) -> None:
+    if risk not in session.report_risks:
+        session.report_risks.append(risk)
 
 
 def get_session_path(workspace_root: Path) -> Path:

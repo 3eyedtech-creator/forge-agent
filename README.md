@@ -145,6 +145,7 @@ Slash commands are handled locally and are not sent to the model.
 /session show         Show short-term session messages
 /session path         Show the session file path
 /session clear        Clear short-term session messages
+/report               Show the current task report
 /plan show            Show the active task plan
 /plan update <id> <status> [notes]
 /plan clear           Clear the active task plan
@@ -160,6 +161,8 @@ in_progress
 completed
 failed
 ```
+
+The task report includes changed files, commands run, verification commands, risks, and suggested next steps. In the current slice, `/run` commands are tracked automatically; full tracking for model-called file tools will be expanded in a later release.
 
 ## Safety Model
 

@@ -1229,6 +1229,13 @@ Budget policies:
 - Supports appending observations.
 - Provides concise summary for context manager.
 
+**Initial Report Slice:**
+
+- Add session-backed report fields for changed files, commands run, and report risks.
+- Add `/report` slash command with Summary, Files Changed, Commands Run, Verification, Risks, and Next Steps sections.
+- Track `/run` commands in the session report, classifying test/lint/typecheck commands as verification.
+- Later slices will track model-called file tools directly, include report context in final assistant responses, and record richer tool observations.
+
 ---
 
 ### CA-071: Implement Agent Loop MVP
