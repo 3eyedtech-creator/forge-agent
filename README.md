@@ -1,107 +1,179 @@
 # Forge Agent
 
-This is a small learning project for building a local coding agent from scratch.
+Forge Agent is a local terminal coding agent that runs inside your project directory. It can chat with you about the codebase, inspect files, retrieve repository context, maintain local memory, run approved commands, and make file changes through tool calls.
 
-The current version is intentionally simple: it starts an interactive terminal loop, sends your messages to a LangChain agent backed by OpenAI, and prints responses with Rich.
+This project is intentionally built in small, understandable pieces. It is useful today as a learning-focused coding agent and a foundation for building a Claude Code-style developer assistant from scratch.
 
-## Setup
+## Features
 
-Create and activate a virtual environment:
+- Interactive CLI experience with the `forge` command.
+- OpenAI-backed LangChain agent loop.
+- Repository file listing, file reading, and text search tools.
+- SQLite-backed codebase indexing and retrieval.
+- Short-term session memory stored locally.
+- Long-term workspace memory with slash commands.
+- Model routing between fast and reasoning models.
+- Structured planning for complex tasks.
+- File create, write, and exact edit tools.
+- Policy-guarded terminal command execution.
+- Lightweight Python snippet sandbox with `/python`.
+- Rich terminal output.
 
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-```
+## Requirements
 
-Install the CLI in editable mode for local development:
+- Python 3.11 or newer.
+- An OpenAI API key.
+- `pipx` for the recommended global install path.
 
-```powershell
-pip install -e .
-```
+## Install
 
-This makes the `forge` command available in the active Python environment.
-
-## Install From GitHub
-
-macOS/Linux:
+### macOS/Linux
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/3eyedtech-creator/forge-agent/main/install.sh | bash
 ```
 
-Windows PowerShell:
+### Windows PowerShell
 
 ```powershell
 irm https://raw.githubusercontent.com/3eyedtech-creator/forge-agent/main/install.ps1 | iex
 ```
 
-Both installers use `pipx` so the `forge` command can be run from any repository.
+The installer uses `pipx`, so the `forge` command is available from any repository after installation.
 
-Create a `.env` file by copying `.env.example`, then add your real OpenAI API key:
+You can also install directly with `pipx`:
 
-```powershell
-Copy-Item .env.example .env
+```bash
+pipx install git+https://github.com/3eyedtech-creator/forge-agent.git
 ```
 
-Model routing is configured in `.forge-agent/config.toml`:
+## Configure
+
+Forge Agent reads your OpenAI API key from a `.env` file in the workspace where you run `forge`.
+
+Create `.env`:
+
+```bash
+OPENAI_API_KEY=your-openai-api-key-here
+```
+
+Optional model configuration lives at `.forge-agent/config.toml`:
 
 ```toml
 fast_model = "gpt-4.1-mini"
 reasoning_model = "gpt-4.1"
 ```
 
-Run the agent:
+If the config file is missing, Forge Agent uses its built-in defaults.
 
-```powershell
+## Usage
+
+Open a terminal inside the repository you want to work on:
+
+```bash
+cd path/to/your/project
 forge
 ```
 
-Type `exit` or `quit` to stop the chat loop.
+Then ask questions or request coding tasks:
 
-The agent writes a local JSONL event log to `.forge-agent/events.jsonl`.
-The current chat session is saved to `.forge-agent/sessions/current.json`.
+```text
+Explain how authentication works in this repo.
+Find where the user profile is updated.
+Create a small plan for adding password reset.
+Search for TODO comments.
+```
+
+Forge Agent treats the current terminal directory as the active workspace.
 
 ## Slash Commands
 
-Slash commands are handled locally and are not sent to the model:
+Slash commands are handled locally and are not sent to the model.
 
 ```text
-/help
-/status
-/index
-/retrieve <query>
-/run <command>
-/python <code>
-/memory add <text>
-/memory list
-/memory clear
-/session show
-/session path
-/session clear
-/plan show
-/plan clear
-/clear
-/exit
+/help                 Show available commands
+/status               Show workspace, model, and message count
+/index                Rebuild the workspace index
+/retrieve <query>     Retrieve relevant repository context
+/run <command>        Run a terminal command through policy checks
+/python <code>        Run Python code in a temporary sandbox directory
+/memory add <text>    Save a workspace memory
+/memory list          List workspace memories
+/memory clear         Clear workspace memories
+/session show         Show short-term session messages
+/session path         Show the session file path
+/session clear        Clear short-term session messages
+/plan show            Show the active task plan
+/plan clear           Clear the active task plan
+/clear                Alias for /session clear
+/exit                 Exit the agent
 ```
 
-`/python <code>` runs a Python snippet in a temporary directory with a stripped environment. This is useful for quick calculations, parser experiments, and tiny repro scripts without writing files into the workspace. It is a lightweight sandbox, not a container or VM security boundary.
+## Safety Model
 
-To use the agent in another repository, open a terminal in that repository and run:
+Forge Agent is designed to be local-first and explicit about risky actions.
+
+- Repository state stays on your machine except for content sent to OpenAI during model calls.
+- `.env` should contain secrets and should not be committed.
+- Terminal commands run through a policy layer.
+- Safe read-only commands can run directly.
+- Risky commands require approval.
+- Destructive commands are blocked by default.
+- `/python <code>` runs in a temporary directory with a stripped environment.
+
+The current Python sandbox is lightweight. It is useful for quick calculations and small repro scripts, but it is not a container or virtual machine security boundary.
+
+## Local Development
+
+Clone the repository:
+
+```bash
+git clone https://github.com/3eyedtech-creator/forge-agent.git
+cd forge-agent
+```
+
+Create and activate a virtual environment:
+
+```bash
+python -m venv .venv
+```
+
+Windows PowerShell:
 
 ```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+macOS/Linux:
+
+```bash
+source .venv/bin/activate
+```
+
+Install in editable mode:
+
+```bash
+pip install -e .
+```
+
+Run the agent:
+
+```bash
 forge
 ```
 
-The agent treats the current terminal directory as the workspace.
+Run tests:
 
-If you want `forge` available globally without activating this virtual environment, install it with `pipx`:
-
-```powershell
-pipx install -e D:\coding_agent
+```bash
+python -m unittest discover -s tests
 ```
 
-For direct GitHub installation without the installer script:
+## Project Status
 
-```powershell
-pipx install git+https://github.com/3eyedtech-creator/forge-agent.git
-```
+Forge Agent is under active development. The current focus is building a clear, inspectable coding agent architecture with indexing, retrieval, memory, planning, safe tools, and packaging.
+
+Planned next areas include stronger sandbox isolation, richer command detection, better patch application, secret scanning, Git-aware workflows, and production release hardening.
+
+## Repository
+
+GitHub: https://github.com/3eyedtech-creator/forge-agent
