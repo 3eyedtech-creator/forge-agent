@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
-from forge_agent.task_planner import TaskPlan
+from forge_agent.task_planner import TaskPlan, plan_to_dict, update_task_plan
 
 
 @dataclass
@@ -50,13 +50,14 @@ def clear_messages(session: SessionState) -> None:
 
 
 def set_plan(session: SessionState, plan: TaskPlan) -> None:
-    session.active_plan = {
-        "goal": plan.goal,
-        "steps": [
-            {"description": step.description, "status": step.status}
-            for step in plan.steps
-        ],
-    }
+    session.active_plan = plan_to_dict(plan)
+
+
+def update_active_plan(session: SessionState, step_id: str, status: str, notes: str = "") -> None:
+    if session.active_plan is None:
+        raise ValueError("No active plan.")
+
+    session.active_plan = update_task_plan(session.active_plan, step_id, status, notes)
 
 
 def clear_plan(session: SessionState) -> None:

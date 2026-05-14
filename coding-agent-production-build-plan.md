@@ -1270,7 +1270,11 @@ Budget policies:
 - Print the plan before complex model calls.
 - Persist the formatted plan and structured active plan in short-term session memory.
 - Add `/plan show` and `/plan clear` slash commands.
-- Later slices will store structured plan state and update step statuses as work executes.
+- Store step IDs, statuses, notes, risks, and update timestamps in structured plan state.
+- Mark the first step as `in_progress` when a complex task plan is created.
+- Add `/plan update <step_id> <status> [notes]` for explicit step progress updates.
+- Failed plan updates add a risk note to the active plan.
+- Later slices will let the agent update plan state automatically after each tool observation and perform model-driven replanning.
 
 ---
 

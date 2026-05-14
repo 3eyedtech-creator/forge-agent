@@ -9,6 +9,7 @@ from forge_agent.session_memory import (
     load_or_create_session,
     save_session,
     set_plan,
+    update_active_plan,
 )
 from forge_agent.task_planner import create_task_plan
 
@@ -58,12 +59,27 @@ class SessionMemoryTests(unittest.TestCase):
             loaded = load_or_create_session(workspace)
 
             self.assertEqual(loaded.active_plan["goal"], "fix login")
+            self.assertEqual(loaded.active_plan["steps"][0]["id"], "step_1")
+            self.assertIn("risks", loaded.active_plan)
 
             clear_plan(loaded)
             save_session(loaded)
             reloaded = load_or_create_session(workspace)
 
         self.assertIsNone(reloaded.active_plan)
+
+    def test_updates_and_persists_active_plan(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            workspace = Path(temp_dir)
+            session = load_or_create_session(workspace)
+            set_plan(session, create_task_plan("fix login"))
+
+            update_active_plan(session, "step_1", "completed", "Found auth flow")
+            save_session(session)
+            loaded = load_or_create_session(workspace)
+
+        self.assertEqual(loaded.active_plan["steps"][0]["status"], "completed")
+        self.assertEqual(loaded.active_plan["steps"][0]["notes"], "Found auth flow")
 
 
 if __name__ == "__main__":

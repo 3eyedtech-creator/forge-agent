@@ -10,6 +10,7 @@ from forge_agent.approval_mode import ApprovalMode, parse_approval_mode
 from forge_agent.index_builder import build_index
 from forge_agent.long_term_memory import add_memory, clear_memories, list_memories
 from forge_agent.session_memory import get_session_path
+from forge_agent.task_planner import format_task_plan_dict, update_task_plan
 
 
 @dataclass
@@ -29,6 +30,7 @@ class SlashCommandResult:
     should_clear_messages: bool = False
     should_clear_plan: bool = False
     next_approval_mode: ApprovalMode | None = None
+    next_active_plan: dict | None = None
 
 
 HELP_TEXT = """Available commands:
@@ -46,6 +48,7 @@ HELP_TEXT = """Available commands:
 /session path        Show current session file path
 /session clear       Clear current session messages
 /plan show           Show the active task plan
+/plan update <id> <status> [notes]
 /plan clear          Clear the active task plan
 /clear                Clear chat memory
 /exit                 Exit the agent
@@ -156,10 +159,29 @@ def handle_slash_command(command: str, state: SlashCommandState) -> SlashCommand
     if command == "/plan show":
         if not state.active_plan:
             return SlashCommandResult(output="No active plan.")
-        lines = [f"Plan: {state.active_plan['goal']}"]
-        for index, step in enumerate(state.active_plan["steps"], start=1):
-            lines.append(f"{index}. [{step['status']}] {step['description']}")
-        return SlashCommandResult(output="\n".join(lines))
+        return SlashCommandResult(output=format_task_plan_dict(state.active_plan))
+
+    if command.startswith("/plan update "):
+        if not state.active_plan:
+            return SlashCommandResult(output="No active plan.")
+
+        parts = command.split(maxsplit=4)
+        if len(parts) < 4:
+            return SlashCommandResult(output="Usage: /plan update <step_id> <pending|in_progress|completed|failed> [notes]")
+
+        step_id = parts[2]
+        status = parts[3]
+        notes = parts[4] if len(parts) == 5 else ""
+
+        try:
+            updated_plan = update_task_plan(state.active_plan, step_id, status, notes)
+        except ValueError:
+            return SlashCommandResult(output="Usage: /plan update <step_id> <pending|in_progress|completed|failed> [notes]")
+
+        return SlashCommandResult(
+            output=f"Updated {step_id} to {status}.",
+            next_active_plan=updated_plan,
+        )
 
     if command == "/plan clear":
         return SlashCommandResult(output="Plan cleared.", should_clear_plan=True)

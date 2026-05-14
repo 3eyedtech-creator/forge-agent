@@ -146,9 +146,19 @@ Slash commands are handled locally and are not sent to the model.
 /session path         Show the session file path
 /session clear        Clear short-term session messages
 /plan show            Show the active task plan
+/plan update <id> <status> [notes]
 /plan clear           Clear the active task plan
 /clear                Alias for /session clear
 /exit                 Exit the agent
+```
+
+Plan step statuses are:
+
+```text
+pending
+in_progress
+completed
+failed
 ```
 
 ## Safety Model

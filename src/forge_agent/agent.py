@@ -80,6 +80,7 @@ def build_system_prompt(selection: ModelSelection) -> str:
 
     if selection.should_plan:
         prompt += " For complex tasks, first break the work into smaller steps before making changes."
+        prompt += " Follow the active plan step by step, update progress when work changes, and replan if a step fails."
 
     return prompt
 
@@ -146,6 +147,10 @@ def main(argv: list[str] | None = None) -> None:
             if slash_result.next_approval_mode is not None:
                 approval_mode = slash_result.next_approval_mode
 
+            if slash_result.next_active_plan is not None:
+                session.active_plan = slash_result.next_active_plan
+                save_session(session)
+
             if slash_result.should_clear_messages:
                 clear_messages(session)
                 save_session(session)
@@ -169,6 +174,8 @@ def main(argv: list[str] | None = None) -> None:
 
         if selection.should_plan:
             plan = create_task_plan(query)
+            plan.steps[0].status = "in_progress"
+            plan.steps[0].notes = "Started task planning"
             formatted_plan = format_task_plan(plan)
             console.print(Panel(formatted_plan, title="Plan", border_style="magenta"))
             set_plan(session, plan)

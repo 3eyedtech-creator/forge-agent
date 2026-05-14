@@ -173,14 +173,64 @@ class SlashCommandsTests(unittest.TestCase):
                 message_count=0,
                 active_plan={
                     "goal": "fix login",
-                    "steps": [{"description": "Inspect files", "status": "pending"}],
+                    "steps": [{"id": "step_1", "description": "Inspect files", "status": "pending", "notes": ""}],
+                    "risks": [],
+                    "updated_at": "now",
                 },
             )
 
             result = handle_slash_command("/plan show", state)
 
         self.assertIn("Plan: fix login", result.output)
+        self.assertIn("step_1. [pending]", result.output)
         self.assertIn("Inspect files", result.output)
+
+    def test_plan_update_command_updates_active_plan(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            state = SlashCommandState(
+                workspace_root=Path(temp_dir),
+                model="gpt-test",
+                message_count=0,
+                active_plan={
+                    "goal": "fix login",
+                    "steps": [{"id": "step_1", "description": "Inspect files", "status": "pending", "notes": ""}],
+                    "risks": [],
+                    "updated_at": "now",
+                },
+            )
+
+            result = handle_slash_command("/plan update step_1 completed Read auth files", state)
+
+        self.assertIsNotNone(result.next_active_plan)
+        self.assertEqual(result.next_active_plan["steps"][0]["status"], "completed")
+        self.assertEqual(result.next_active_plan["steps"][0]["notes"], "Read auth files")
+        self.assertIn("Updated step_1 to completed", result.output)
+
+    def test_plan_update_command_reports_missing_active_plan(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            state = SlashCommandState(workspace_root=Path(temp_dir), model="gpt-test", message_count=0)
+
+            result = handle_slash_command("/plan update step_1 completed", state)
+
+        self.assertEqual(result.output, "No active plan.")
+
+    def test_plan_update_command_reports_invalid_usage(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            state = SlashCommandState(
+                workspace_root=Path(temp_dir),
+                model="gpt-test",
+                message_count=0,
+                active_plan={
+                    "goal": "fix login",
+                    "steps": [{"id": "step_1", "description": "Inspect files", "status": "pending", "notes": ""}],
+                    "risks": [],
+                    "updated_at": "now",
+                },
+            )
+
+            result = handle_slash_command("/plan update step_1 started", state)
+
+        self.assertEqual(result.output, "Usage: /plan update <step_id> <pending|in_progress|completed|failed> [notes]")
 
     def test_plan_clear_command_requests_plan_clear(self) -> None:
         with TemporaryDirectory() as temp_dir:
