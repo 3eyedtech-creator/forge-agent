@@ -4,7 +4,7 @@ $ErrorActionPreference = "Stop"
 $ForgeAgentRepoUrl = if ($env:FORGE_AGENT_REPO_URL) {
     $env:FORGE_AGENT_REPO_URL
 } else {
-    "https://github.com/YOUR_USERNAME/forge-agent.git"
+    "https://github.com/3eyedtech-creator/forge-agent.git"
 }
 $PackageSpec = "git+$ForgeAgentRepoUrl"
 

@@ -23,18 +23,16 @@ This makes the `forge` command available in the active Python environment.
 
 ## Install From GitHub
 
-After this repository is pushed to GitHub, update `install.sh`, `install.ps1`, and the URLs below by replacing `YOUR_USERNAME` with the GitHub account or organization name.
-
 macOS/Linux:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/forge-agent/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/3eyedtech-creator/forge-agent/main/install.sh | bash
 ```
 
 Windows PowerShell:
 
 ```powershell
-irm https://raw.githubusercontent.com/YOUR_USERNAME/forge-agent/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/3eyedtech-creator/forge-agent/main/install.ps1 | iex
 ```
 
 Both installers use `pipx` so the `forge` command can be run from any repository.
@@ -105,5 +103,5 @@ pipx install -e D:\coding_agent
 For direct GitHub installation without the installer script:
 
 ```powershell
-pipx install git+https://github.com/YOUR_USERNAME/forge-agent.git
+pipx install git+https://github.com/3eyedtech-creator/forge-agent.git
 ```

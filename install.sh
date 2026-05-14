@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-FORGE_AGENT_REPO_URL="${FORGE_AGENT_REPO_URL:-https://github.com/YOUR_USERNAME/forge-agent.git}"
+FORGE_AGENT_REPO_URL="${FORGE_AGENT_REPO_URL:-https://github.com/3eyedtech-creator/forge-agent.git}"
 PACKAGE_SPEC="git+${FORGE_AGENT_REPO_URL}"
 
 echo "Installing forge-agent..."

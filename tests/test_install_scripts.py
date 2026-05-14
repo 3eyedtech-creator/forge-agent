@@ -3,6 +3,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+REPO_URL = "https://github.com/3eyedtech-creator/forge-agent.git"
 
 
 class InstallScriptsTests(unittest.TestCase):
@@ -13,8 +14,9 @@ class InstallScriptsTests(unittest.TestCase):
         self.assertIn("set -euo pipefail", script)
         self.assertIn("FORGE_AGENT_REPO_URL=", script)
         self.assertIn("python3 -m pipx install", script)
-        self.assertIn("git+", script)
-        self.assertIn("https://github.com/", script)
+        self.assertIn(f"git+${{FORGE_AGENT_REPO_URL}}", script)
+        self.assertIn(REPO_URL, script)
+        self.assertNotIn("YOUR_USERNAME", script)
         self.assertIn("forge", script)
 
     def test_powershell_install_script_uses_pipx_and_github_package_url(self) -> None:
@@ -23,8 +25,9 @@ class InstallScriptsTests(unittest.TestCase):
         self.assertIn("Set-StrictMode -Version Latest", script)
         self.assertIn("$ForgeAgentRepoUrl", script)
         self.assertIn("pipx install", script)
-        self.assertIn("git+", script)
-        self.assertIn("https://github.com/", script)
+        self.assertIn("git+$ForgeAgentRepoUrl", script)
+        self.assertIn(REPO_URL, script)
+        self.assertNotIn("YOUR_USERNAME", script)
         self.assertIn("forge", script)
 
 
