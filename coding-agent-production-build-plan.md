@@ -1171,8 +1171,21 @@ Budget policies:
 - Loads project and user MCP configuration.
 - Lists configured servers without connecting.
 - Supports stdio MCP servers first.
+- Supports streamable HTTP MCP servers.
 - Requires approval before launching unknown MCP server commands.
 - Converts MCP tools into agent-callable tools through policy checks.
+
+**Initial Slice:**
+
+- Add `.forge-agent/mcp.json` and `~/.forge-agent/mcp.json` loading.
+- Merge user and project config with project entries taking precedence.
+- Validate `stdio` and `streamable_http` server shapes.
+- Add `/mcp list` and `/mcp show <server>`.
+- Redact env and header values in terminal display.
+- Add `langchain-mcp-adapters` and load enabled MCP tools through `MultiServerMCPClient`.
+- Append loaded MCP tools to the local Forge tool list.
+- Continue with local tools if MCP loading fails.
+- Later slices will add per-server approvals, per-tool policy controls, MCP resources/prompts, persistent sessions, and stronger reporting of MCP tool calls.
 
 ---
 

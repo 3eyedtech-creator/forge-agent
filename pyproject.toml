@@ -9,6 +9,7 @@ description = "A local CLI coding agent built for learning."
 requires-python = ">=3.11"
 dependencies = [
     "langchain",
+    "langchain-mcp-adapters",
     "langchain-openai",
     "langgraph",
     "python-dotenv",

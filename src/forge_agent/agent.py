@@ -1,3 +1,4 @@
+import asyncio
 import os
 import sys
 import tomllib
@@ -20,6 +21,8 @@ from forge_agent.approval_mode import ApprovalMode, build_interrupt_policy
 from forge_agent.cli_args import get_version_text, resolve_startup_command
 from forge_agent.event_log import create_event, write_event
 from forge_agent.human_review import ask_for_tool_decisions, has_rejection
+from forge_agent.mcp_config import McpConfigError, load_mcp_config
+from forge_agent.mcp_tools import load_mcp_tools
 from forge_agent.model_router import ModelSelection, route_model
 from forge_agent.session_memory import (
     add_command_run,
@@ -113,6 +116,15 @@ def main(argv: list[str] | None = None) -> None:
     write_event(session_event)
 
     tools = build_tools(workspace_root, console=console)
+    try:
+        mcp_config = load_mcp_config(workspace_root)
+        mcp_result = asyncio.run(load_mcp_tools(mcp_config))
+        tools.extend(mcp_result.tools)
+        for warning in mcp_result.warnings:
+            console.print(f"[yellow]{warning}[/yellow]")
+    except McpConfigError as error:
+        console.print(f"[yellow]MCP config error: {error}[/yellow]")
+
     session = load_or_create_session(workspace_root)
     messages = session.messages
     approval_mode = ApprovalMode.MANUAL

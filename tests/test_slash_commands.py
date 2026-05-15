@@ -1,4 +1,5 @@
 import unittest
+import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -99,6 +100,55 @@ class SlashCommandsTests(unittest.TestCase):
             result = handle_slash_command("/skill missing", state)
 
         self.assertEqual(result.output, "Unknown skill: missing")
+
+    def test_mcp_list_command_displays_configured_servers(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            workspace = Path(temp_dir)
+            (workspace / ".forge-agent").mkdir()
+            (workspace / ".forge-agent" / "mcp.json").write_text(
+                json.dumps({"servers": {"docs": {"enabled": True, "transport": "streamable_http", "url": "http://localhost:8000/mcp"}}}),
+                encoding="utf-8",
+            )
+            state = SlashCommandState(workspace_root=workspace, model="gpt-test", message_count=0)
+
+            result = handle_slash_command("/mcp list", state)
+
+        self.assertIn("docs [enabled] streamable_http", result.output)
+
+    def test_mcp_show_command_redacts_secret_values(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            workspace = Path(temp_dir)
+            (workspace / ".forge-agent").mkdir()
+            (workspace / ".forge-agent" / "mcp.json").write_text(
+                json.dumps(
+                    {
+                        "servers": {
+                            "docs": {
+                                "enabled": True,
+                                "transport": "streamable_http",
+                                "url": "http://localhost:8000/mcp",
+                                "headers": {"Authorization": "secret"},
+                            }
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
+            state = SlashCommandState(workspace_root=workspace, model="gpt-test", message_count=0)
+
+            result = handle_slash_command("/mcp show docs", state)
+
+        self.assertIn("Server: docs", result.output)
+        self.assertIn("Authorization: <redacted>", result.output)
+        self.assertNotIn("secret", result.output)
+
+    def test_mcp_show_command_reports_unknown_server(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            state = SlashCommandState(workspace_root=Path(temp_dir), model="gpt-test", message_count=0)
+
+            result = handle_slash_command("/mcp show missing", state)
+
+        self.assertEqual(result.output, "Unknown MCP server: missing")
 
     def test_index_command_builds_index(self) -> None:
         with TemporaryDirectory() as temp_dir:

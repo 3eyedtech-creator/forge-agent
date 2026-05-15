@@ -142,6 +142,8 @@ Slash commands are handled locally and are not sent to the model.
 /skills list          List available skills
 /skills show <name>   Show skill instructions
 /skill <name>         Activate a skill for future turns
+/mcp list             List configured MCP servers
+/mcp show <server>    Show MCP server configuration
 /memory add <text>    Save a workspace memory
 /memory list          List workspace memories
 /memory clear         Clear workspace memories
@@ -220,6 +222,61 @@ description: Use when fixing bugs.
 3. Make the smallest safe fix.
 4. Run focused verification.
 ```
+
+## MCP Servers
+
+Forge Agent can load tools from configured MCP servers through LangChain's MCP adapter. Project config lives at:
+
+```text
+.forge-agent/mcp.json
+```
+
+User-level config lives at:
+
+```text
+~/.forge-agent/mcp.json
+```
+
+Project server entries override user server entries with the same name.
+
+Supported transports in this slice:
+
+```text
+stdio
+streamable_http
+```
+
+Example:
+
+```json
+{
+  "servers": {
+    "filesystem": {
+      "enabled": true,
+      "transport": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "."]
+    },
+    "docs": {
+      "enabled": true,
+      "transport": "streamable_http",
+      "url": "http://localhost:8000/mcp",
+      "headers": {
+        "Authorization": "${DOCS_MCP_TOKEN}"
+      }
+    }
+  }
+}
+```
+
+Inspect MCP config:
+
+```text
+/mcp list
+/mcp show docs
+```
+
+Secret values in `env` and `headers` are redacted in terminal output. MCP tool loading is best-effort: if a configured server fails or dependencies are unavailable, Forge prints a warning and continues with local tools.
 
 ## Safety Model
 

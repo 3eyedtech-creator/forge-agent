@@ -9,6 +9,7 @@ from forge_agent.agent_tools import (
 from forge_agent.approval_mode import ApprovalMode, parse_approval_mode
 from forge_agent.index_builder import build_index
 from forge_agent.long_term_memory import add_memory, clear_memories, list_memories
+from forge_agent.mcp_config import McpConfigError, format_mcp_list, format_mcp_show, load_mcp_config
 from forge_agent.session_memory import get_session_path
 from forge_agent.skill_loader import (
     default_builtin_skills_dir,
@@ -57,6 +58,8 @@ HELP_TEXT = """Available commands:
 /skills list          List available skills
 /skills show <name>   Show skill instructions
 /skill <name>         Use a skill for future turns
+/mcp list             List configured MCP servers
+/mcp show <server>    Show MCP server configuration
 /memory add <text>    Save a workspace memory
 /memory list          List workspace memories
 /memory clear         Clear workspace memories
@@ -124,6 +127,24 @@ def handle_slash_command(command: str, state: SlashCommandState) -> SlashCommand
             output=f"Active skill set to {skill_name}.",
             next_active_skill=skill_name,
         )
+
+    if command == "/mcp list":
+        try:
+            config = load_mcp_config(state.workspace_root)
+        except McpConfigError as error:
+            return SlashCommandResult(output=f"MCP config error: {error}")
+        return SlashCommandResult(output=format_mcp_list(config))
+
+    if command.startswith("/mcp show "):
+        server_name = command.removeprefix("/mcp show ").strip()
+        try:
+            config = load_mcp_config(state.workspace_root)
+        except McpConfigError as error:
+            return SlashCommandResult(output=f"MCP config error: {error}")
+        server = config.servers.get(server_name)
+        if server is None:
+            return SlashCommandResult(output=f"Unknown MCP server: {server_name}")
+        return SlashCommandResult(output=format_mcp_show(server))
 
     if command == "/index":
         result = build_index(state.workspace_root)
