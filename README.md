@@ -139,6 +139,9 @@ Slash commands are handled locally and are not sent to the model.
 /run <command>        Run a terminal command through policy checks
 /python <code>        Run Python code in a temporary sandbox directory
 /mode [manual|auto]   Show or change approval mode
+/skills list          List available skills
+/skills show <name>   Show skill instructions
+/skill <name>         Activate a skill for future turns
 /memory add <text>    Save a workspace memory
 /memory list          List workspace memories
 /memory clear         Clear workspace memories
@@ -163,6 +166,60 @@ failed
 ```
 
 The task report includes changed files, commands run, verification commands, risks, and suggested next steps. In the current slice, `/run` commands are tracked automatically; full tracking for model-called file tools will be expanded in a later release.
+
+## Skills
+
+Skills are local instruction packages that teach Forge Agent how to approach common tasks. Built-in skills currently include:
+
+```text
+bugfix
+explain-code
+refactor
+test-generation
+```
+
+List and inspect skills:
+
+```text
+/skills list
+/skills show bugfix
+```
+
+Activate a skill:
+
+```text
+/skill bugfix
+```
+
+Project skills can be added under:
+
+```text
+.forge-agent/skills/<skill-name>/SKILL.md
+```
+
+User-level skills can be added under:
+
+```text
+~/.forge-agent/skills/<skill-name>/SKILL.md
+```
+
+Project skills override user skills, and user skills override built-in skills with the same name.
+
+Example `SKILL.md`:
+
+```markdown
+---
+name: bugfix
+description: Use when fixing bugs.
+---
+
+# Bugfix
+
+1. Reproduce the failure.
+2. Read the traceback carefully.
+3. Make the smallest safe fix.
+4. Run focused verification.
+```
 
 ## Safety Model
 

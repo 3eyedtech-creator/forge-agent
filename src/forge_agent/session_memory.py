@@ -18,6 +18,7 @@ class SessionState:
     changed_files: list[dict] | None = None
     commands_run: list[dict] | None = None
     report_risks: list[str] | None = None
+    active_skill: str | None = None
 
     def __post_init__(self) -> None:
         if self.changed_files is None:
@@ -88,6 +89,10 @@ def add_command_run(session: SessionState, command: str, exit_code: int, kind: s
 def add_report_risk(session: SessionState, risk: str) -> None:
     if risk not in session.report_risks:
         session.report_risks.append(risk)
+
+
+def set_active_skill(session: SessionState, skill_name: str | None) -> None:
+    session.active_skill = skill_name
 
 
 def get_session_path(workspace_root: Path) -> Path:

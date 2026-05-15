@@ -28,9 +28,11 @@ from forge_agent.session_memory import (
     clear_plan,
     load_or_create_session,
     save_session,
+    set_active_skill,
     set_plan,
 )
-from forge_agent.slash_commands import SlashCommandState, handle_slash_command
+from forge_agent.skill_loader import format_skill_system_prompt
+from forge_agent.slash_commands import SlashCommandState, handle_slash_command, load_available_skills
 from forge_agent.task_planner import create_task_plan, format_task_plan
 from forge_agent.terminal_ui import build_ready_text
 
@@ -73,7 +75,7 @@ def get_last_message_text(result: dict) -> str:
     return str(content)
 
 
-def build_system_prompt(selection: ModelSelection) -> str:
+def build_system_prompt(selection: ModelSelection, active_skill_prompt: str = "") -> str:
     prompt = (
         "You are a helpful coding agent. Keep answers clear and concise. "
         "Use workspace tools when you need to inspect local files."
@@ -82,6 +84,9 @@ def build_system_prompt(selection: ModelSelection) -> str:
     if selection.should_plan:
         prompt += " For complex tasks, first break the work into smaller steps before making changes."
         prompt += " Follow the active plan step by step, update progress when work changes, and replan if a step fails."
+
+    if active_skill_prompt:
+        prompt += f"\n\n{active_skill_prompt}"
 
     return prompt
 
@@ -144,6 +149,7 @@ def main(argv: list[str] | None = None) -> None:
                     changed_files=session.changed_files,
                     commands_run=session.commands_run,
                     report_risks=session.report_risks,
+                    active_skill=session.active_skill,
                 ),
             )
             console.print(Panel(slash_result.output, title="Command", border_style="blue"))
@@ -162,6 +168,10 @@ def main(argv: list[str] | None = None) -> None:
                     slash_result.command_run["exit_code"],
                     kind=slash_result.command_run["kind"],
                 )
+                save_session(session)
+
+            if slash_result.next_active_skill is not None:
+                set_active_skill(session, slash_result.next_active_skill)
                 save_session(session)
 
             if slash_result.should_clear_messages:
@@ -196,6 +206,12 @@ def main(argv: list[str] | None = None) -> None:
             save_session(session)
 
         llm = ChatOpenAI(model=selection.model)
+        active_skill_prompt = ""
+        if session.active_skill:
+            active_skill = load_available_skills(workspace_root).get(session.active_skill)
+            if active_skill is not None:
+                active_skill_prompt = format_skill_system_prompt(active_skill)
+
         agent = create_agent(
             model=llm,
             tools=tools,
@@ -206,7 +222,7 @@ def main(argv: list[str] | None = None) -> None:
                 )
             ],
             checkpointer=InMemorySaver(),
-            system_prompt=build_system_prompt(selection),
+            system_prompt=build_system_prompt(selection, active_skill_prompt),
         )
 
         agent_config = {"configurable": {"thread_id": f"forge-agent-local-{uuid4().hex}"}}

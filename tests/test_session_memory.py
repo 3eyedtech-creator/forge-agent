@@ -11,6 +11,7 @@ from forge_agent.session_memory import (
     clear_plan,
     load_or_create_session,
     save_session,
+    set_active_skill,
     set_plan,
     update_active_plan,
 )
@@ -30,6 +31,7 @@ class SessionMemoryTests(unittest.TestCase):
         self.assertEqual(session.changed_files, [])
         self.assertEqual(session.commands_run, [])
         self.assertEqual(session.report_risks, [])
+        self.assertIsNone(session.active_skill)
 
     def test_appends_and_persists_messages(self) -> None:
         with TemporaryDirectory() as temp_dir:
@@ -114,6 +116,17 @@ class SessionMemoryTests(unittest.TestCase):
             add_changed_file(session, "app.py", "edited")
 
         self.assertEqual(session.changed_files, [{"path": "app.py", "action": "edited"}])
+
+    def test_sets_and_persists_active_skill(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            workspace = Path(temp_dir)
+            session = load_or_create_session(workspace)
+
+            set_active_skill(session, "bugfix")
+            save_session(session)
+            loaded = load_or_create_session(workspace)
+
+        self.assertEqual(loaded.active_skill, "bugfix")
 
 
 if __name__ == "__main__":

@@ -65,6 +65,41 @@ class SlashCommandsTests(unittest.TestCase):
 
         self.assertEqual(result.output, "Usage: /mode [manual|auto]")
 
+    def test_skills_list_command_displays_available_skills(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            state = SlashCommandState(workspace_root=Path(temp_dir), model="gpt-test", message_count=0)
+
+            result = handle_slash_command("/skills list", state)
+
+        self.assertIn("bugfix", result.output)
+        self.assertIn("explain-code", result.output)
+
+    def test_skills_show_command_displays_skill_body(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            state = SlashCommandState(workspace_root=Path(temp_dir), model="gpt-test", message_count=0)
+
+            result = handle_slash_command("/skills show bugfix", state)
+
+        self.assertIn("Skill: bugfix", result.output)
+        self.assertIn("When fixing a bug", result.output)
+
+    def test_skill_command_selects_active_skill(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            state = SlashCommandState(workspace_root=Path(temp_dir), model="gpt-test", message_count=0)
+
+            result = handle_slash_command("/skill bugfix", state)
+
+        self.assertEqual(result.next_active_skill, "bugfix")
+        self.assertIn("Active skill set to bugfix", result.output)
+
+    def test_skill_command_reports_unknown_skill(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            state = SlashCommandState(workspace_root=Path(temp_dir), model="gpt-test", message_count=0)
+
+            result = handle_slash_command("/skill missing", state)
+
+        self.assertEqual(result.output, "Unknown skill: missing")
+
     def test_index_command_builds_index(self) -> None:
         with TemporaryDirectory() as temp_dir:
             workspace = Path(temp_dir)

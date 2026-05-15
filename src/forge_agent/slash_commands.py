@@ -10,6 +10,12 @@ from forge_agent.approval_mode import ApprovalMode, parse_approval_mode
 from forge_agent.index_builder import build_index
 from forge_agent.long_term_memory import add_memory, clear_memories, list_memories
 from forge_agent.session_memory import get_session_path
+from forge_agent.skill_loader import (
+    default_builtin_skills_dir,
+    discover_skills,
+    format_skill_list,
+    format_skill_show,
+)
 from forge_agent.task_planner import format_task_plan_dict, update_task_plan
 from forge_agent.task_report import format_task_report
 
@@ -25,6 +31,7 @@ class SlashCommandState:
     changed_files: list[dict] | None = None
     commands_run: list[dict] | None = None
     report_risks: list[str] | None = None
+    active_skill: str | None = None
 
 
 @dataclass
@@ -36,6 +43,7 @@ class SlashCommandResult:
     next_approval_mode: ApprovalMode | None = None
     next_active_plan: dict | None = None
     command_run: dict | None = None
+    next_active_skill: str | None = None
 
 
 HELP_TEXT = """Available commands:
@@ -46,6 +54,9 @@ HELP_TEXT = """Available commands:
 /run <command>        Run a terminal command through policy checks
 /python <code>        Run Python code in a temporary sandbox directory
 /mode [manual|auto]   Show or change approval mode
+/skills list          List available skills
+/skills show <name>   Show skill instructions
+/skill <name>         Use a skill for future turns
 /memory add <text>    Save a workspace memory
 /memory list          List workspace memories
 /memory clear         Clear workspace memories
@@ -90,6 +101,28 @@ def handle_slash_command(command: str, state: SlashCommandState) -> SlashCommand
         return SlashCommandResult(
             output=f"Approval mode set to {next_mode.value}.",
             next_approval_mode=next_mode,
+        )
+
+    if command == "/skills list":
+        skills = load_available_skills(state.workspace_root)
+        return SlashCommandResult(output=format_skill_list(skills))
+
+    if command.startswith("/skills show "):
+        skill_name = command.removeprefix("/skills show ").strip()
+        skills = load_available_skills(state.workspace_root)
+        skill = skills.get(skill_name)
+        if skill is None:
+            return SlashCommandResult(output=f"Unknown skill: {skill_name}")
+        return SlashCommandResult(output=format_skill_show(skill))
+
+    if command.startswith("/skill "):
+        skill_name = command.removeprefix("/skill ").strip()
+        skills = load_available_skills(state.workspace_root)
+        if skill_name not in skills:
+            return SlashCommandResult(output=f"Unknown skill: {skill_name}")
+        return SlashCommandResult(
+            output=f"Active skill set to {skill_name}.",
+            next_active_skill=skill_name,
         )
 
     if command == "/index":
@@ -237,3 +270,11 @@ def classify_command_kind(command: str) -> str:
         return "verification"
 
     return "command"
+
+
+def load_available_skills(workspace_root: Path) -> dict:
+    return discover_skills(
+        project_dir=workspace_root / ".forge-agent" / "skills",
+        user_dir=Path.home() / ".forge-agent" / "skills",
+        builtin_dir=default_builtin_skills_dir(),
+    )

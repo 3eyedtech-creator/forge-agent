@@ -1131,6 +1131,51 @@ Budget policies:
 
 ---
 
+## Epic G2: Skills and MCP Extensions
+
+### CA-065: Implement Skill Registry
+
+**Goal:** Let users add reusable instruction packages that the agent can apply to future turns.
+
+**Priority:** P0
+**Dependencies:** CA-011, CA-062
+
+**Acceptance Criteria:**
+
+- Discovers built-in, user-level, and project-level skills.
+- Uses `SKILL.md` as the required skill entrypoint.
+- Parses simple frontmatter with name and description.
+- Project skills override user skills, and user skills override built-in skills.
+- Users can list skills, inspect skill instructions, and activate a skill.
+- Active skill is persisted in short-term session memory.
+- Active skill instructions are included in the system prompt.
+
+**Initial Slice:**
+
+- Add built-in skills for `bugfix`, `explain-code`, `refactor`, and `test-generation`.
+- Add `/skills list`, `/skills show <name>`, and `/skill <name>`.
+- Support project skills under `.forge-agent/skills/<name>/SKILL.md`.
+- Support user skills under `~/.forge-agent/skills/<name>/SKILL.md`.
+- Package built-in skill markdown files in the installed distribution.
+- Later slices will add skill clearing, automatic skill selection, supporting files, scripts, and skill-scoped tool guidance.
+
+### CA-066: Implement MCP Registry
+
+**Goal:** Let users configure external MCP servers that can expose tools, resources, and prompts.
+
+**Priority:** P1
+**Dependencies:** CA-065
+
+**Acceptance Criteria:**
+
+- Loads project and user MCP configuration.
+- Lists configured servers without connecting.
+- Supports stdio MCP servers first.
+- Requires approval before launching unknown MCP server commands.
+- Converts MCP tools into agent-callable tools through policy checks.
+
+---
+
 ### CA-061: Implement OpenAI LangChain Integration
 
 **Goal:** Support OpenAI chat models through LangChain.
