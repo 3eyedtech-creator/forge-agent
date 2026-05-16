@@ -176,6 +176,8 @@ Skills are local instruction packages that teach Forge Agent how to approach com
 ```text
 bugfix
 explain-code
+git
+github
 refactor
 test-generation
 ```

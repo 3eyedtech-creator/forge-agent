@@ -74,6 +74,8 @@ class SlashCommandsTests(unittest.TestCase):
 
         self.assertIn("bugfix", result.output)
         self.assertIn("explain-code", result.output)
+        self.assertIn("git", result.output)
+        self.assertIn("github", result.output)
 
     def test_skills_show_command_displays_skill_body(self) -> None:
         with TemporaryDirectory() as temp_dir:

@@ -104,6 +104,8 @@ class SkillLoaderTests(unittest.TestCase):
 
         self.assertIn("bugfix", skills)
         self.assertIn("explain-code", skills)
+        self.assertIn("git", skills)
+        self.assertIn("github", skills)
 
 
 if __name__ == "__main__":
