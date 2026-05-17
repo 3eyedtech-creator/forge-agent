@@ -16,7 +16,10 @@ class ApprovalResponse(str, Enum):
 SAFE_READ_COMMANDS = {
     ("dir",),
     ("git", "diff"),
+    ("git", "log", "--oneline", "-5"),
     ("git", "status"),
+    ("git", "status", "--short"),
+    ("git", "branch", "--show-current"),
     ("ls",),
     ("pwd",),
 }

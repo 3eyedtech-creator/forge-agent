@@ -194,6 +194,47 @@ class SlashCommandsTests(unittest.TestCase):
 
         self.assertEqual(result.output, "Usage: /run <command>")
 
+    def test_git_status_command_runs_and_records_command(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            workspace = init_git_repo(Path(temp_dir))
+            state = SlashCommandState(workspace_root=workspace, model="gpt-test", message_count=0)
+
+            result = handle_slash_command("/git status", state)
+
+        self.assertIn("Command: git status --short", result.output)
+        self.assertEqual(result.command_run["command"], "git status --short")
+
+    def test_git_add_command_runs_and_records_command(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            workspace = init_git_repo(Path(temp_dir))
+            (workspace / "notes.txt").write_text("notes\n", encoding="utf-8")
+            state = SlashCommandState(workspace_root=workspace, model="gpt-test", message_count=0)
+
+            result = handle_slash_command("/git add notes.txt", state)
+
+        self.assertIn("Command: git add -- notes.txt", result.output)
+        self.assertEqual(result.command_run["command"], "git add -- notes.txt")
+
+    def test_git_commit_command_runs_and_records_command(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            workspace = init_git_repo(Path(temp_dir))
+            (workspace / "notes.txt").write_text("notes\n", encoding="utf-8")
+            handle_slash_command("/git add notes.txt", SlashCommandState(workspace_root=workspace, model="gpt-test", message_count=0))
+            state = SlashCommandState(workspace_root=workspace, model="gpt-test", message_count=0)
+
+            result = handle_slash_command("/git commit add notes", state)
+
+        self.assertIn("Command: git commit -m add notes", result.output)
+        self.assertEqual(result.command_run["command"], "git commit -m add notes")
+
+    def test_git_command_rejects_unsupported_operation(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            state = SlashCommandState(workspace_root=Path(temp_dir), model="gpt-test", message_count=0)
+
+            result = handle_slash_command("/git reset --hard", state)
+
+        self.assertEqual(result.output, "Usage: /git <status|diff|log|branch|add|commit>")
+
     def test_python_command_runs_code_in_sandbox(self) -> None:
         with TemporaryDirectory() as temp_dir:
             state = SlashCommandState(workspace_root=Path(temp_dir), model="gpt-test", message_count=0)
@@ -379,3 +420,15 @@ class SlashCommandsTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def init_git_repo(workspace: Path) -> Path:
+    import subprocess
+
+    subprocess.run(["git", "init"], cwd=workspace, check=True, capture_output=True, text=True)
+    subprocess.run(["git", "config", "user.email", "forge@example.com"], cwd=workspace, check=True)
+    subprocess.run(["git", "config", "user.name", "Forge Tests"], cwd=workspace, check=True)
+    (workspace / "app.py").write_text("print('hello')\n", encoding="utf-8")
+    subprocess.run(["git", "add", "app.py"], cwd=workspace, check=True)
+    subprocess.run(["git", "commit", "-m", "initial commit"], cwd=workspace, check=True, capture_output=True, text=True)
+    return workspace

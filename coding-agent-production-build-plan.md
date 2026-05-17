@@ -1450,6 +1450,30 @@ Budget policies:
 
 ---
 
+### CA-095: Implement Local Git Tools
+
+**Goal:** Provide safe first-class Git operations for the active workspace.
+
+**Priority:** P0
+**Dependencies:** CA-090
+
+**Acceptance Criteria:**
+
+- Supports read-only Git status, diff, log, and branch inspection.
+- Supports controlled staging and commit commands from slash commands.
+- Exposes read-only Git tools to the agent.
+- Records Git slash commands in the task report.
+- Does not expose destructive Git operations such as reset, clean, rebase, or force push.
+
+**Initial Slice:**
+
+- Add `/git status`, `/git diff`, `/git log`, `/git branch`, `/git add <path>`, and `/git commit <message>`.
+- Add agent-callable read-only Git tools: `git_status`, `git_diff`, `git_log`, and `git_branch`.
+- Keep write Git tools out of the agent tool list until approval handling is more precise for Git mutations.
+- Later slices will add approved agent-callable staging/commit tools, branch creation, and remote GitHub workflows.
+
+---
+
 ### CA-091: Implement Project Script Detector
 
 **Goal:** Detect test, lint, typecheck, and build commands.

@@ -7,6 +7,14 @@ from forge_agent.agent_tools import (
     run_terminal_command_tool,
 )
 from forge_agent.approval_mode import ApprovalMode, parse_approval_mode
+from forge_agent.git_tools import (
+    run_git_add,
+    run_git_branch,
+    run_git_commit,
+    run_git_diff,
+    run_git_log,
+    run_git_status,
+)
 from forge_agent.index_builder import build_index
 from forge_agent.long_term_memory import add_memory, clear_memories, list_memories
 from forge_agent.mcp_config import McpConfigError, format_mcp_list, format_mcp_show, load_mcp_config
@@ -60,6 +68,12 @@ HELP_TEXT = """Available commands:
 /skill <name>         Use a skill for future turns
 /mcp list             List configured MCP servers
 /mcp show <server>    Show MCP server configuration
+/git status           Show short Git status
+/git diff             Show unstaged Git diff
+/git log              Show recent Git commits
+/git branch           Show current Git branch
+/git add <path>       Stage a path
+/git commit <message> Commit staged changes
 /memory add <text>    Save a workspace memory
 /memory list          List workspace memories
 /memory clear         Clear workspace memories
@@ -145,6 +159,9 @@ def handle_slash_command(command: str, state: SlashCommandState) -> SlashCommand
         if server is None:
             return SlashCommandResult(output=f"Unknown MCP server: {server_name}")
         return SlashCommandResult(output=format_mcp_show(server))
+
+    if command.startswith("/git"):
+        return handle_git_command(command, state)
 
     if command == "/index":
         result = build_index(state.workspace_root)
@@ -291,6 +308,45 @@ def classify_command_kind(command: str) -> str:
         return "verification"
 
     return "command"
+
+
+def handle_git_command(command: str, state: SlashCommandState) -> SlashCommandResult:
+    if command == "/git status":
+        return git_result(run_git_status(state.workspace_root), "git status --short")
+
+    if command == "/git diff":
+        return git_result(run_git_diff(state.workspace_root), "git diff")
+
+    if command == "/git log":
+        return git_result(run_git_log(state.workspace_root), "git log --oneline -5")
+
+    if command == "/git branch":
+        return git_result(run_git_branch(state.workspace_root), "git branch --show-current")
+
+    if command.startswith("/git add "):
+        path = command.removeprefix("/git add ").strip()
+        if not path:
+            return SlashCommandResult(output="Usage: /git add <path>")
+        return git_result(run_git_add(state.workspace_root, path), f"git add -- {path}")
+
+    if command.startswith("/git commit "):
+        message = command.removeprefix("/git commit ").strip()
+        if not message:
+            return SlashCommandResult(output="Usage: /git commit <message>")
+        return git_result(run_git_commit(state.workspace_root, message), f"git commit -m {message}")
+
+    return SlashCommandResult(output="Usage: /git <status|diff|log|branch|add|commit>")
+
+
+def git_result(output: str, command: str) -> SlashCommandResult:
+    return SlashCommandResult(
+        output=output,
+        command_run={
+            "command": command,
+            "exit_code": parse_exit_code(output),
+            "kind": "git",
+        },
+    )
 
 
 def load_available_skills(workspace_root: Path) -> dict:

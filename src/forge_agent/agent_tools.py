@@ -4,6 +4,7 @@ from forge_agent.context_builder import build_context_section
 from forge_agent.file_list_tool import list_files
 from forge_agent.file_read_tool import read_text_file
 from forge_agent.file_write_tool import FileWriteError, create_file, edit_file, write_file
+from forge_agent.git_tools import run_git_branch, run_git_diff, run_git_log, run_git_status
 from forge_agent.index_builder import build_index
 from forge_agent.index_store import IndexStore
 from forge_agent.long_term_memory import retrieve_memories
@@ -98,6 +99,22 @@ def run_python_sandbox_tool(workspace_root: Path, code: str) -> str:
     return "\n".join(output_parts)
 
 
+def run_git_status_tool(workspace_root: Path) -> str:
+    return run_git_status(workspace_root)
+
+
+def run_git_diff_tool(workspace_root: Path) -> str:
+    return run_git_diff(workspace_root)
+
+
+def run_git_log_tool(workspace_root: Path) -> str:
+    return run_git_log(workspace_root)
+
+
+def run_git_branch_tool(workspace_root: Path) -> str:
+    return run_git_branch(workspace_root)
+
+
 def run_create_file_tool(workspace_root: Path, path: str, content: str) -> str:
     try:
         result = create_file(workspace_root, path, content)
@@ -174,6 +191,26 @@ def build_tools(workspace_root: Path, console=None) -> list:
         return run_python_sandbox_tool(workspace_root, code)
 
     @tool
+    def git_status() -> str:
+        """Show short Git status for the current workspace."""
+        return run_git_status_tool(workspace_root)
+
+    @tool
+    def git_diff() -> str:
+        """Show unstaged Git diff for the current workspace."""
+        return run_git_diff_tool(workspace_root)
+
+    @tool
+    def git_log() -> str:
+        """Show the five most recent Git commits."""
+        return run_git_log_tool(workspace_root)
+
+    @tool
+    def git_branch() -> str:
+        """Show the current Git branch."""
+        return run_git_branch_tool(workspace_root)
+
+    @tool
     def create_workspace_file(path: str, content: str) -> str:
         """Create a new UTF-8 text file in the current workspace."""
         return run_create_file_tool(workspace_root, path, content)
@@ -196,6 +233,10 @@ def build_tools(workspace_root: Path, console=None) -> list:
         retrieve_workspace_memories,
         run_terminal_command,
         run_python_sandbox_code,
+        git_status,
+        git_diff,
+        git_log,
+        git_branch,
         create_workspace_file,
         write_workspace_file,
         edit_workspace_file,

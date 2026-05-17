@@ -144,6 +144,12 @@ Slash commands are handled locally and are not sent to the model.
 /skill <name>         Activate a skill for future turns
 /mcp list             List configured MCP servers
 /mcp show <server>    Show MCP server configuration
+/git status           Show short Git status
+/git diff             Show unstaged Git diff
+/git log              Show recent commits
+/git branch           Show current branch
+/git add <path>       Stage a path
+/git commit <message> Commit staged changes
 /memory add <text>    Save a workspace memory
 /memory list          List workspace memories
 /memory clear         Clear workspace memories
@@ -279,6 +285,21 @@ Inspect MCP config:
 ```
 
 Secret values in `env` and `headers` are redacted in terminal output. MCP tool loading is best-effort: if a configured server fails or dependencies are unavailable, Forge prints a warning and continues with local tools.
+
+## Git Workflow
+
+Forge Agent includes local Git helpers for common repository tasks:
+
+```text
+/git status
+/git diff
+/git log
+/git branch
+/git add <path>
+/git commit <message>
+```
+
+The agent also has read-only Git tools for status, diff, log, and branch inspection. Destructive operations such as reset, clean, rebase, and force push are intentionally not included in this slice.
 
 ## Safety Model
 

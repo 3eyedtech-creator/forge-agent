@@ -5,6 +5,10 @@ from tempfile import TemporaryDirectory
 
 from forge_agent.agent_tools import (
     build_tools,
+    run_git_branch_tool,
+    run_git_diff_tool,
+    run_git_log_tool,
+    run_git_status_tool,
     run_create_file_tool,
     run_edit_file_tool,
     run_list_files_tool,
@@ -183,6 +187,39 @@ class AgentToolsTests(unittest.TestCase):
         self.assertIn("Exit code: 0", output)
         self.assertIn("STDOUT:\nhello", output)
 
+    def test_git_status_tool_returns_command_output(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            workspace = init_git_repo(Path(temp_dir))
+
+            output = run_git_status_tool(workspace)
+
+        self.assertIn("Command: git status --short", output)
+
+    def test_git_read_tools_are_registered_when_langchain_is_available(self) -> None:
+        if importlib.util.find_spec("langchain") is None:
+            self.skipTest("langchain is not installed in this test runtime")
+
+        with TemporaryDirectory() as temp_dir:
+            tools = build_tools(Path(temp_dir))
+
+        tool_names = {tool.name for tool in tools}
+        self.assertIn("git_status", tool_names)
+        self.assertIn("git_diff", tool_names)
+        self.assertIn("git_log", tool_names)
+        self.assertIn("git_branch", tool_names)
+
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def init_git_repo(workspace: Path) -> Path:
+    import subprocess
+
+    subprocess.run(["git", "init"], cwd=workspace, check=True, capture_output=True, text=True)
+    subprocess.run(["git", "config", "user.email", "forge@example.com"], cwd=workspace, check=True)
+    subprocess.run(["git", "config", "user.name", "Forge Tests"], cwd=workspace, check=True)
+    (workspace / "app.py").write_text("print('hello')\n", encoding="utf-8")
+    subprocess.run(["git", "add", "app.py"], cwd=workspace, check=True)
+    subprocess.run(["git", "commit", "-m", "initial commit"], cwd=workspace, check=True, capture_output=True, text=True)
+    return workspace
